@@ -15,7 +15,7 @@ var GAMES = [
     "slug": "league-of-legends",
     "name": "League of Legends",
     "genre": "MOBA",
-    "img": null
+    "img": "leagueoflegends.jpg"
   },
   {
     "slug": "arc-raiders",

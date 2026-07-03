@@ -27,10 +27,10 @@ GAMES = [
     ),
     dict(
         slug="league-of-legends", name="League of Legends", genre="MOBA",
-        img=None, players="5v5", platform="PC (Riot Client)",
+        img="leagueoflegends.jpg", players="5v5", platform="PC (Riot Client)",
         status="Active Rotation",
         blurb=[
-            "The one game on this list that isn't on Steam, which is why there's no photograph above — Riot keeps its own client, its own launcher, and its own particular brand of chat restrictions.",
+            "The one game on this list that isn't on Steam — Riot keeps its own client, its own launcher, and its own particular brand of chat restrictions. Photo above via Riot's official splash art library, not the store capsule everything else on this page borrows from.",
             "FTA runs normals and the occasional ranked flex night. Bring a champion pool, leave the tilt at the door.",
         ],
     ),
@@ -249,7 +249,10 @@ for g in GAMES:
             f'<img src="../assets/img/games/{g["img"]}" alt="{esc(g["name"])}">'
             f'<div class="halftone-overlay"></div>'
         )
-        caption = f'Official capsule art, {esc(g["name"])}. Reproduced from Steam store assets.'
+        if g["slug"] == "league-of-legends":
+            caption = f'Official splash art, {esc(g["name"])}. Reproduced from Riot Games assets.'
+        else:
+            caption = f'Official capsule art, {esc(g["name"])}. Reproduced from Steam store assets.'
     else:
         photo_inner = (
             '<div style="aspect-ratio:616/353;display:flex;align-items:center;'
