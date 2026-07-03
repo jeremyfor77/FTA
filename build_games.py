@@ -232,6 +232,8 @@ PAGE_TMPL = """<!doctype html>
       <dt>FTA Status</dt><dd>{status}</dd>
     </dl>
   </div>
+
+  {extra_section}
 </main>
 
 <footer>
@@ -264,6 +266,36 @@ for g in GAMES:
 
     paragraphs = "\n      ".join(f"<p>{esc(p)}</p>" for p in g["blurb"])
 
+    extra_section = ""
+    if g["slug"] == "7-days-to-die":
+        extra_section = """
+  <div class="panel">
+    <div class="panel-title">Mod Package — Get the Loadout</div>
+    <p style="margin-bottom:10px;">
+      <a href="https://drive.google.com/drive/folders/1Y61Tg8YVuivMv6OTgiS2hCK8XE-IeJlp?usp=drive_link" target="_blank" rel="noopener" style="font-family:var(--font-mono);font-weight:700;">
+        &#8594; Download FTA-7D2D-Modpack.zip (Google Drive)
+      </a>
+    </p>
+    <p style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-faint);margin-bottom:8px;">
+      Installation
+    </p>
+    <ol style="font-size:14.5px;padding-left:20px;margin:0 0 14px;">
+      <li>Download and unzip <code>FTA-7D2D-Modpack.zip</code>.</li>
+      <li>Open your game's <code>Mods</code> folder — for the Steam client, that's
+        <code>...\\Steam\\steamapps\\common\\7 Days To Die\\Mods\\</code>.</li>
+      <li><strong>Before copying anything in:</strong> check whether you already have a folder with
+        the same name as any of the four below from an older version. If so, delete the old one first
+        &mdash; don't merge old and new files together, since leftover files from a prior version can
+        conflict with the update.</li>
+      <li>Copy all four folders from the unzipped package into your <code>Mods</code> folder:
+        <code>BeyondStorage3</code>, <code>MPLogue_Better_Biomes_7D2D_v3_1</code>,
+        <code>Better vanilla vehicles</code>, <code>AGF-HUDPlus-1Main-v6.3.0</code>.</li>
+      <li>Restart 7 Days to Die. If prompted with <em>"AntiCheat Incompatible Mods,"</em> click
+        <strong>Restart</strong>, not Continue &mdash; Continue skips loading the mods entirely.</li>
+    </ol>
+  </div>
+"""
+
     html = PAGE_TMPL.format(
         name=esc(g["name"]),
         genre=esc(g["genre"]),
@@ -273,6 +305,7 @@ for g in GAMES:
         photo_inner=photo_inner,
         caption=caption,
         paragraphs=paragraphs,
+        extra_section=extra_section,
     )
     with open(os.path.join(GAMES_DIR, g["slug"] + ".html"), "w", encoding="utf-8") as f:
         f.write(html)
