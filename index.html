@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FTA — Field Gazette</title>
+<meta name="description" content="The FTA clan's home base: server status, roster, field log, and the games we play.">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap masthead-top">
+    <span>Vol. I — No. 1</span>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false">Night Edition</button>
+    <span>Field Edition — <span id="todayDate">3 July 2026</span></span>
+  </div>
+  <div class="wrap masthead-name">
+    <a href="index.html"><span class="mast-word">FTA</span></a>
+    <div class="mast-tagline">Founded on Spite &amp; Scrap Metal</div>
+  </div>
+  <nav class="wrap tabs" aria-label="Sections">
+    <a class="tab" href="#dispatch" aria-current="page">Front Page</a>
+    <a class="tab" href="#games">Games</a>
+    <a class="tab" href="#roster">Roster</a>
+    <a class="tab" href="#log">Field Log</a>
+    <a class="tab" href="#comms">Comms</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <section class="lead" id="dispatch">
+    <span class="kicker"><span class="status-dot"></span> Server Online — Navezgane, North America East</span>
+    <h1 class="headline">Zombie Diggers Banned by Executive Order, FTA Bunker Opens for Business</h1>
+    <p class="deck">The clan's first dedicated ground: a 7 Days to Die V3.0 "Dead Hot Summer" server, hand-tuned, modded, and — per new policy — completely undiggable from below.</p>
+    <p class="byline">Field Report — FTA7D2D30NOZombieDiggers — Filed 3 July 2026</p>
+  </section>
+
+  <div class="front-grid">
+    <div>
+      <div class="section-title">The Dispatch</div>
+      <div class="story-cols col-rule">
+        <p>After a lengthy provisioning campaign, the clan's 7 Days to Die server is standing and fully modded on Indifferent Broccoli infrastructure. The build tracks V3.0.0 "Dead Hot Summer," the game's largest sandbox overhaul to date, replacing the old scattering of individual difficulty knobs with a single portable SandboxCode string — ours is tuned for one very specific grievance: the undead can no longer dig.</p>
+        <p>Anti-cheat runs disabled fleet-wide, a requirement for the mod loadout below, all of which patch live game code rather than sitting quietly in XML. Every mod was verified line-by-line against the server's own boot log before being cleared for the roster — no silent failures, no half-loaded features.</p>
+        <p>Connection details and the current mod package live in the Comms column. New arrivals should expect an AntiCheat Incompatible Mods prompt on first join — click Restart, not Continue, or the mods simply won't load client-side.</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="panel-title">Server Manifest <span class="edition-no">7D2D · V3.0.0</span></div>
+        <table class="manifest">
+          <tr><th>World</th><td>Navezgane</td></tr>
+          <tr><th>Region</th><td>NA East</td></tr>
+          <tr><th>Slots</th><td>6</td></tr>
+          <tr><th>Anti-Cheat</th><td>Disabled</td></tr>
+          <tr><th>Zombie Digging</th><td><span class="tag ok">Disabled</span></td></tr>
+        </table>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Mod Loadout</div>
+        <table class="manifest">
+          <tr><th>Mod</th><th>Ver.</th><th>Does</th></tr>
+          <tr><td>Beyond Storage 3</td><td>3.0.4</td><td>Craft/refuel from nearby storage &amp; workstations</td></tr>
+          <tr><td>Better Biomes</td><td>3.1</td><td>Fallen trees, denser terrain foliage</td></tr>
+          <tr><td>BW Vanilla Vehicles</td><td>1.0</td><td>Less wobble, more speed</td></tr>
+          <tr><td>AGF HUDPlus</td><td>6.3.0</td><td>Compact HUD, wider compass</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <section id="games">
+    <div class="section-title">Inside This Edition — The Games We Play</div>
+    <p style="max-width:70ch;font-style:italic;color:var(--ink-soft);margin-bottom:18px;">Seventeen fronts, one clan. Click through for the full write-up on each.</p>
+    <div class="index-grid" id="gameIndex"></div>
+  </section>
+
+  <div class="front-grid" id="roster">
+    <div>
+      <div class="section-title">Field Log</div>
+      <div id="log">
+        <div class="log-entry">
+          <span class="log-date">3 July 2026</span>
+          <p><strong>Server stood up on Indifferent Broccoli</strong> — provisioned, branch confirmed on V3.0.0 Stable, SandboxCode migrated.</p>
+        </div>
+        <div class="log-entry">
+          <span class="log-date">3 July 2026</span>
+          <p><strong>Zombie digging disabled</strong> via the community SandboxCode generator — Entities → Zombie Digging → Off.</p>
+        </div>
+        <div class="log-entry">
+          <span class="log-date">3 July 2026</span>
+          <p><strong>Beyond Storage 3 installed</strong> — craft and refuel from nearby containers and workstations without hauling.</p>
+        </div>
+        <div class="log-entry">
+          <span class="log-date">3 July 2026</span>
+          <p><strong>Better Biomes, Better Vanilla Vehicles, and AGF HUDPlus installed</strong> — full loadout verified clean against the boot log, zero conflicts.</p>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="panel-title">Personnel Manifest</div>
+        <table class="manifest">
+          <tr><th>Handle</th><th>Role</th><th>Status</th></tr>
+          <tr><td>Jeremy</td><td>Founder / Ops</td><td><span class="tag ok">Active</span></td></tr>
+          <tr><td>RAiNZ777</td><td>Field Tester</td><td><span class="tag ok">Active</span></td></tr>
+          <tr><td>—</td><td>Open Slot</td><td><span class="tag open">Open</span></td></tr>
+          <tr><td>—</td><td>Open Slot</td><td><span class="tag open">Open</span></td></tr>
+        </table>
+      </div>
+
+      <div class="editorial">
+        <div class="panel-title">Letters to the Editor: Things FTA Hates</div>
+        <ul>
+          <li>Zombies that dig through three floors of concrete to eat a sleeping player. Executive order now forbids this.</li>
+          <li>Loot goblins who open every crate in a POI and leave with a single leather scrap.</li>
+          <li>Getting disconnected mid-Blood-Moon and coming back to a bedroll and regrets.</li>
+          <li>Anyone who clicks "Continue" instead of "Restart" on the AntiCheat prompt, then asks why their storage mod doesn't work.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <section id="comms">
+    <div class="section-title">Classifieds &amp; Comms</div>
+    <div class="classifieds" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr));display:grid;">
+      <div class="classified">
+        <span class="label">Discord</span>
+        <a href="#">discord.gg/PLACEHOLDER</a>
+        <div class="edit-flag">✎ Edit href in index.html</div>
+      </div>
+      <div class="classified">
+        <span class="label">Mod Package Download</span>
+        <a href="#">Google Drive — PLACEHOLDER</a>
+        <div class="edit-flag">✎ Edit href in index.html</div>
+      </div>
+      <div class="classified">
+        <span class="label">7D2D Connect</span>
+        <a href="#">PLACEHOLDER_IP:PORT</a>
+        <div class="edit-flag">✎ Find in IB → Server Management</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  FTA Field Gazette · Printed on demand · No zombies were permitted to dig in the making of this page
+</footer>
+
+<script src="assets/script.js"></script>
+<script src="assets/games-data.js"></script>
+<script>
+  var idx = document.getElementById('gameIndex');
+  GAMES.forEach(function (g) {
+    var a = document.createElement('a');
+    a.className = 'game-card';
+    a.href = 'games/' + g.slug + '.html';
+    var frame = document.createElement('div');
+    frame.className = 'frame';
+    if (g.img) {
+      var img = document.createElement('img');
+      img.src = 'assets/img/games/' + g.img;
+      img.alt = g.name;
+      img.loading = 'lazy';
+      frame.appendChild(img);
+      var overlay = document.createElement('div');
+      overlay.className = 'halftone-overlay';
+      frame.appendChild(overlay);
+    } else {
+      frame.style.display = 'flex';
+      frame.style.alignItems = 'center';
+      frame.style.justifyContent = 'center';
+      frame.style.fontFamily = 'var(--font-mono)';
+      frame.style.fontSize = '11px';
+      frame.style.color = 'var(--ink-faint)';
+      frame.style.textTransform = 'uppercase';
+      frame.textContent = 'Photograph Not Available';
+    }
+    a.appendChild(frame);
+    var cap = document.createElement('div');
+    cap.className = 'cap';
+    cap.innerHTML = '<div class="g-name">' + g.name + '</div><div class="g-genre">' + g.genre + '</div>';
+    a.appendChild(cap);
+    idx.appendChild(a);
+  });
+</script>
+</body>
+</html>
