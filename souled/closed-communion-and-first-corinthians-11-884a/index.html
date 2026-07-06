@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Souled — Shared Session</title>
+<style>
+    :root { --bg:#14100c; --panel:#1e1812; --ink:#e8dfd0; --dim:#9a8c75; --gold:#c9a35c; --user:#2a2318; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--ink); font-family: Georgia, 'Times New Roman', serif; min-height: 100vh; }
+    header { padding: 18px 24px 10px; border-bottom: 1px solid #3a2f20; }
+    header h1 { font-size: 22px; letter-spacing: 3px; color: var(--gold); font-weight: normal; }
+    header p { font-size: 13px; color: var(--dim); margin-top: 4px; font-style: italic; }
+    #gate { max-width: 420px; margin: 12vh auto; text-align: center; padding: 0 20px; }
+    #gate h2 { color: var(--gold); font-weight: normal; letter-spacing: 2px; margin-bottom: 10px; }
+    #gate p { color: var(--dim); font-size: 14px; margin-bottom: 22px; line-height: 1.5; }
+    #pass { width: 100%; background: var(--panel); border: 1px solid #3a2f20; border-radius: 8px; color: var(--ink); font-family: inherit; font-size: 16px; padding: 13px; outline: none; text-align: center; }
+    #pass:focus { border-color: var(--gold); }
+    #unlock { margin-top: 14px; background: var(--gold); color: #14100c; border: none; border-radius: 8px; padding: 12px 28px; font-family: inherit; font-size: 15px; cursor: pointer; }
+    #gate-err { color: #ff6b6b; font-size: 13px; margin-top: 12px; min-height: 18px; }
+    #content { max-width: 820px; margin: 0 auto; padding: 24px 20px 160px; }
+    #summary { background: var(--panel); border: 1px solid var(--gold); border-radius: 10px; padding: 18px 20px; margin-bottom: 28px; line-height: 1.6; font-size: 15px; }
+    #summary::before { content: "SUMMARY"; display: block; letter-spacing: 3px; font-size: 11px; color: var(--gold); margin-bottom: 8px; }
+    .msg { margin: 0 0 16px; padding: 12px 16px; border-radius: 8px; line-height: 1.55; font-size: 16px; white-space: pre-wrap; }
+    .user { background: var(--user); border-left: 3px solid #6b5a3e; }
+    .user::before { content: "Jeremy"; display: block; font-size: 11px; letter-spacing: 2px; color: var(--dim); margin-bottom: 4px; }
+    .souled { background: var(--panel); border-left: 3px solid var(--gold); position: relative; padding-right: 52px; }
+    .souled::before { content: "Souled"; display: block; font-size: 11px; letter-spacing: 2px; color: var(--gold); margin-bottom: 4px; }
+    .playbtn { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--gold); background: transparent; color: var(--gold); font-size: 13px; cursor: pointer; line-height: 1; }
+    .playbtn:hover { background: #2a2318; }
+    #player { position: fixed; right: 24px; bottom: 30px; z-index: 50; background: var(--panel); border: 1px solid var(--gold); border-radius: 14px; padding: 12px 16px; box-shadow: 0 8px 30px rgba(0,0,0,.6); display: flex; flex-direction: column; gap: 8px; max-width: 320px; }
+    #player[hidden] { display: none; }
+    #player-label { color: var(--dim); font-size: 12px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #player-label::before { content: "♪ NOW PLAYING"; display: block; font-style: normal; letter-spacing: 2px; font-size: 10px; color: var(--gold); margin-bottom: 2px; }
+    #player-controls { display: flex; gap: 8px; align-items: center; }
+    .tbtn { background: var(--bg); color: var(--gold); border: 1px solid var(--gold); border-radius: 8px; padding: 6px 14px; font-size: 15px; cursor: pointer; }
+    .tbtn:hover { background: #2a2318; }
+    #pos { color: var(--dim); font-size: 13px; min-width: 48px; }
+    #pclose { margin-left: auto; border-color: #6b5a3e; color: var(--dim); }
+</style>
+</head>
+<body>
+<header>
+    <h1>SOULED</h1>
+    <p id="subtitle">A shared session — Scripture &amp; Philosophy</p>
+</header>
+
+<div id="gate">
+    <h2>THIS SESSION IS SEALED</h2>
+    <p>This conversation is encrypted. Enter the passphrase you were given to unlock the transcript and audio.</p>
+    <input id="pass" type="password" placeholder="Passphrase" autocomplete="off">
+    <br>
+    <button id="unlock">Unlock</button>
+    <div id="gate-err"></div>
+</div>
+
+<div id="content" hidden>
+    <div id="summary"></div>
+    <div id="log"></div>
+</div>
+
+<div id="player" hidden>
+    <div id="player-label"></div>
+    <div id="player-controls">
+        <button class="tbtn" id="rw" title="Restart chunk / previous chunk">⏮</button>
+        <button class="tbtn" id="pp" title="Play / Pause">⏸</button>
+        <button class="tbtn" id="ff" title="Next chunk">⏭</button>
+        <span id="pos"></span>
+        <button class="tbtn" id="pclose" title="Stop">✕</button>
+    </div>
+</div>
+
+<script>
+const gate    = document.getElementById('gate');
+const gateErr = document.getElementById('gate-err');
+const passEl  = document.getElementById('pass');
+const content = document.getElementById('content');
+const log     = document.getElementById('log');
+const summaryEl = document.getElementById('summary');
+const playerEl    = document.getElementById('player');
+const playerLabel = document.getElementById('player-label');
+const ppBtn  = document.getElementById('pp');
+const rwBtn  = document.getElementById('rw');
+const ffBtn  = document.getElementById('ff');
+const pos    = document.getElementById('pos');
+const pclose = document.getElementById('pclose');
+
+let key = null;
+const blobCache = new Map();
+
+async function deriveKey(passphrase, saltB64) {
+    const salt = Uint8Array.from(atob(saltB64), c => c.charCodeAt(0));
+    const material = await crypto.subtle.importKey(
+        'raw', new TextEncoder().encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt, iterations: 310000, hash: 'SHA-256' },
+        material, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+}
+
+async function decryptFile(path) {
+    const buf = new Uint8Array(await (await fetch(path)).arrayBuffer());
+    const iv = buf.slice(0, 12);
+    const ct = buf.slice(12);
+    return crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+}
+
+async function audioUrl(n) {
+    if (blobCache.has(n)) return blobCache.get(n);
+    const plain = await decryptFile('audio/' + n + '.enc');
+    const url = URL.createObjectURL(new Blob([plain], { type: 'audio/mpeg' }));
+    blobCache.set(n, url);
+    return url;
+}
+
+// ---- Player ----
+const player = new Audio();
+const playlist = { items: [], idx: 0, active: false, label: '' };
+
+function stopAudio() {
+    playlist.active = false;
+    playlist.items = [];
+    player.onended = null;
+    player.pause();
+    updatePlayer();
+}
+
+function playAnswer(indices, label) {
+    playlist.items = indices.slice();
+    playlist.idx = 0;
+    playlist.active = true;
+    playlist.label = label;
+    playCurrent();
+}
+
+async function playCurrent() {
+    if (playlist.idx >= playlist.items.length) { playlist.active = false; updatePlayer(); return; }
+    const myIdx = playlist.idx;
+    try {
+        const url = await audioUrl(playlist.items[myIdx]);
+        if (!playlist.active || playlist.idx !== myIdx) return;
+        player.src = url;
+        player.onended = () => { playlist.idx++; playCurrent(); };
+        player.play().catch(() => { playlist.active = false; updatePlayer(); });
+        if (myIdx + 1 < playlist.items.length) audioUrl(playlist.items[myIdx + 1]);
+    } catch (_) {
+        playlist.active = false;
+    }
+    updatePlayer();
+}
+
+function updatePlayer() {
+    const show = playlist.active && playlist.items.length > 0;
+    playerEl.hidden = !show;
+    if (!show) return;
+    playerLabel.textContent = playlist.label || 'Souled';
+    ppBtn.textContent = player.paused ? '▶' : '⏸';
+    pos.textContent = Math.min(playlist.idx + 1, playlist.items.length) + ' / ' + playlist.items.length;
+}
+
+player.addEventListener('play',  updatePlayer);
+player.addEventListener('pause', updatePlayer);
+
+ppBtn.onclick = () => { if (playlist.active) player.paused ? player.play() : player.pause(); };
+rwBtn.onclick = () => {
+    if (!playlist.active) return;
+    if (player.currentTime > 3 || playlist.idx === 0) { player.currentTime = 0; player.play(); }
+    else { playlist.idx--; playCurrent(); }
+};
+ffBtn.onclick = () => { if (playlist.active) { playlist.idx++; playCurrent(); } };
+pclose.onclick = () => stopAudio();
+
+// ---- Unlock & render ----
+function addMsg(role, text, audio) {
+    const d = document.createElement('div');
+    d.className = 'msg ' + (role === 'user' ? 'user' : 'souled');
+    d.textContent = text;
+    if (role !== 'user' && audio && audio.length) {
+        const label = text.replace(/\s+/g, ' ').slice(0, 60) + (text.length > 60 ? '…' : '');
+        const b = document.createElement('button');
+        b.className = 'playbtn';
+        b.textContent = '▶';
+        b.title = 'Play this answer';
+        b.onclick = () => playAnswer(audio, label);
+        d.appendChild(b);
+    }
+    log.appendChild(d);
+}
+
+async function unlock() {
+    gateErr.textContent = '';
+    const pass = passEl.value;
+    if (!pass) return;
+    try {
+        const meta = await (await fetch('meta.json')).json();
+        key = await deriveKey(pass, meta.salt);
+        const data = JSON.parse(new TextDecoder().decode(await decryptFile('data.enc')));
+        document.title = 'Souled — ' + data.title;
+        document.getElementById('subtitle').textContent = data.title + ' — ' + data.date;
+        summaryEl.appendChild(document.createTextNode(data.summary));
+        for (const m of data.messages) addMsg(m.role, m.text, m.audio);
+        gate.hidden = true;
+        content.hidden = false;
+    } catch (_) {
+        gateErr.textContent = 'That passphrase did not open the seal. Check it and try again.';
+    }
+}
+
+document.getElementById('unlock').onclick = unlock;
+passEl.addEventListener('keydown', e => { if (e.key === 'Enter') unlock(); });
+</script>
+</body>
+</html>
