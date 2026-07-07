@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Souled — The Study</title>
+<style>
+    :root { --bg:#14100c; --panel:#1e1812; --ink:#e8dfd0; --dim:#9a8c75; --gold:#c9a35c; --user:#2a2318; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--ink); font-family: Georgia, 'Times New Roman', serif; height: 100vh; height: 100dvh; display: flex; flex-direction: column; }
+    header { padding: 14px 20px 8px; border-bottom: 1px solid #3a2f20; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+    header h1 { font-size: 20px; letter-spacing: 3px; color: var(--gold); font-weight: normal; }
+    header p { font-size: 12px; color: var(--dim); font-style: italic; }
+    #newconv { margin-left: auto; background: none; border: 1px solid #3a2f20; border-radius: 6px; color: var(--dim); font-family: inherit; font-size: 12px; padding: 5px 12px; cursor: pointer; }
+    #newconv:hover { border-color: var(--gold); color: var(--gold); }
+    #log { flex: 1; overflow-y: auto; padding: 18px 16px; }
+    .msg { max-width: 780px; margin: 0 auto 14px; padding: 12px 16px; border-radius: 8px; line-height: 1.55; font-size: 16px; white-space: pre-wrap; }
+    .user { background: var(--user); border-left: 3px solid #6b5a3e; }
+    .user::before { content: "Jeremy"; display: block; font-size: 11px; letter-spacing: 2px; color: var(--dim); margin-bottom: 4px; }
+    .souled { background: var(--panel); border-left: 3px solid var(--gold); }
+    .souled::before { content: "Souled"; display: block; font-size: 11px; letter-spacing: 2px; color: var(--gold); margin-bottom: 4px; }
+    .sys { text-align: center; color: var(--dim); font-size: 13px; font-style: italic; background: none; }
+    #controls { padding: 12px 16px 16px; border-top: 1px solid #3a2f20; }
+    #bar { max-width: 780px; margin: 0 auto; display: flex; gap: 10px; }
+    #text { flex: 1; background: var(--panel); border: 1px solid #3a2f20; border-radius: 8px; color: var(--ink); font-family: inherit; font-size: 16px; padding: 13px; outline: none; }
+    #text:focus { border-color: var(--gold); }
+    #send { background: var(--gold); color: #14100c; border: none; border-radius: 8px; padding: 13px 20px; font-family: inherit; font-size: 15px; cursor: pointer; }
+    #send:disabled { opacity: .5; }
+    #opts { max-width: 780px; margin: 8px auto 0; display: flex; gap: 18px; font-size: 13px; color: var(--dim); align-items: center; }
+    #opts label { cursor: pointer; user-select: none; color: var(--gold); }
+    #status { margin-left: auto; font-style: italic; }
+</style>
+</head>
+<body>
+<header>
+    <h1>SOULED — THE STUDY</h1>
+    <p>Jeremy's private desk</p>
+    <button id="newconv">🗒 New Conversation</button>
+</header>
+
+<div id="log"><div class="msg sys">The study is quiet. Ask, and the books come down off the shelves.</div></div>
+
+<div id="controls">
+    <div id="bar">
+        <input id="text" placeholder="Ask Souled…" autocomplete="off">
+        <button id="send">Send</button>
+    </div>
+    <div id="opts">
+        <label><input type="checkbox" id="deep"> Deep dive mode (Opus — slower, longer, scholarly)</label>
+        <span id="status"></span>
+    </div>
+</div>
+
+<script>
+const WORKER_URL = 'https://souled.ftaquest.workers.dev';
+const log     = document.getElementById('log');
+const input   = document.getElementById('text');
+const sendBtn = document.getElementById('send');
+const deepEl  = document.getElementById('deep');
+const status  = document.getElementById('status');
+
+let history = [];
+let busy = false;
+
+function ownerKey(forceAsk) {
+    let k = localStorage.getItem('souled-owner-key');
+    if (!k || forceAsk) {
+        k = prompt('Owner key for the study:') || '';
+        if (k) localStorage.setItem('souled-owner-key', k.trim());
+    }
+    return (k || '').trim();
+}
+
+function addMsg(cls, text) {
+    const d = document.createElement('div');
+    d.className = 'msg ' + cls;
+    d.textContent = text;
+    log.appendChild(d);
+    log.scrollTop = log.scrollHeight;
+    return d;
+}
+
+function saveHistory() {
+    try { localStorage.setItem('souled-study-history', JSON.stringify(history)); } catch (_) {}
+}
+
+function restoreHistory() {
+    try {
+        history = JSON.parse(localStorage.getItem('souled-study-history')) || [];
+    } catch (_) { history = []; }
+    for (const m of history) addMsg(m.role === 'user' ? 'user' : 'souled', m.content);
+}
+
+document.getElementById('newconv').onclick = () => {
+    if (history.length && !confirm('Start a new conversation? The current one will be cleared.')) return;
+    history = [];
+    saveHistory();
+    log.innerHTML = '';
+    addMsg('sys', 'A fresh page. What shall we take up?');
+    input.focus();
+};
+
+async function send() {
+    const text = input.value.trim();
+    if (!text || busy) return;
+    const key = ownerKey(false);
+    if (!key) { addMsg('sys', 'No owner key — the study stays locked.'); return; }
+
+    busy = true;
+    sendBtn.disabled = true;
+    input.value = '';
+    addMsg('user', text);
+    const deep = deepEl.checked;
+    status.textContent = deep ? 'Souled is pondering deeply…' : 'Souled is thinking…';
+
+    try {
+        const res = await fetch(WORKER_URL + '/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ownerKey: key, text, history, deep }),
+        });
+        const data = await res.json();
+        if (res.status === 403) {
+            localStorage.removeItem('souled-owner-key');
+            throw new Error('Wrong owner key — try again.');
+        }
+        if (data.error) throw new Error(data.error);
+
+        history.push({ role: 'user', content: text });
+        history.push({ role: 'assistant', content: data.reply });
+        if (history.length > 24) history = history.slice(-24);
+        saveHistory();
+        addMsg('souled', data.reply);
+    } catch (err) {
+        addMsg('sys', 'Error: ' + err.message);
+    }
+    status.textContent = '';
+    busy = false;
+    sendBtn.disabled = false;
+    input.focus();
+}
+
+sendBtn.onclick = send;
+input.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+restoreHistory();
+</script>
+</body>
+</html>
