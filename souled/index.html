@@ -23,6 +23,10 @@
     .s-voices { color: var(--dim); font-size: 13px; margin-bottom: 6px; }
     .s-voices b { color: var(--gold); font-weight: normal; }
     .s-sealed { float: right; color: var(--dim); font-size: 11px; letter-spacing: 2px; border: 1px solid #3a2f20; border-radius: 6px; padding: 3px 8px; margin-left: 10px; }
+    .s-share { float: right; background: none; color: var(--gold); font-family: inherit; font-size: 11px; letter-spacing: 2px; border: 1px solid var(--gold); border-radius: 6px; padding: 3px 10px; margin-left: 10px; cursor: pointer; }
+    .s-share:hover { background: #2a2318; }
+    #share-note { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--gold); color: var(--ink); border-radius: 10px; padding: 10px 18px; font-size: 13px; box-shadow: 0 8px 30px rgba(0,0,0,.6); opacity: 0; pointer-events: none; transition: opacity .25s; max-width: 90vw; text-align: center; }
+    #share-note.show { opacity: 1; }
     #empty { color: var(--dim); font-style: italic; text-align: center; padding: 40px 0; }
 </style>
 </head>
@@ -36,12 +40,41 @@
     <div id="intro">Every session below is sealed. Choose one and enter the passphrase you were given to read the transcript, hear it delivered, and join the conversation.</div>
     <div id="list"><div id="empty">Consulting the archive…</div></div>
 </div>
+<div id="share-note"></div>
 
 <script>
 const WORKER_URL = 'https://souled.ftaquest.workers.dev';
 const list = document.getElementById('list');
 
 function plural(n, word) { return n + ' ' + word + (n === 1 ? '' : 's'); }
+
+const shareNote = document.getElementById('share-note');
+let noteTimer = null;
+function toast(text) {
+    shareNote.textContent = text;
+    shareNote.classList.add('show');
+    clearTimeout(noteTimer);
+    noteTimer = setTimeout(() => shareNote.classList.remove('show'), 4000);
+}
+
+async function shareSession(s) {
+    const link = new URL(s.slug + '/', location.href).href;
+    if (navigator.share) {
+        try {
+            await navigator.share({ title: 'Souled — ' + s.title, text: 'A sealed Round Table session: ' + s.title, url: link });
+            toast('Shared. Remember: send the passphrase separately — never with the link.');
+            return;
+        } catch (err) {
+            if (err.name === 'AbortError') return;
+        }
+    }
+    try {
+        await navigator.clipboard.writeText(link);
+        toast('Link copied. Send the passphrase separately — never in the same message.');
+    } catch (_) {
+        prompt('Copy this link (and send the passphrase separately):', link);
+    }
+}
 
 async function load() {
     let manifest = [];
@@ -59,6 +92,13 @@ async function load() {
         const a = document.createElement('a');
         a.className = 'session';
         a.href = s.slug + '/';
+
+        const share = document.createElement('button');
+        share.className = 's-share';
+        share.textContent = 'SHARE';
+        share.title = 'Share a link to this session';
+        share.onclick = (e) => { e.preventDefault(); e.stopPropagation(); shareSession(s); };
+        a.appendChild(share);
 
         const sealed = document.createElement('span');
         sealed.className = 's-sealed';
