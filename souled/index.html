@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Souled — The Archive</title>
+<style>
+    :root { --bg:#14100c; --panel:#1e1812; --ink:#e8dfd0; --dim:#9a8c75; --gold:#c9a35c; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--ink); font-family: Georgia, 'Times New Roman', serif; min-height: 100vh; }
+    header { padding: 18px 24px 10px; border-bottom: 1px solid #3a2f20; }
+    header h1 { font-size: 22px; letter-spacing: 3px; color: var(--gold); font-weight: normal; }
+    header p { font-size: 13px; color: var(--dim); margin-top: 4px; font-style: italic; }
+    #wrap { max-width: 820px; margin: 0 auto; padding: 28px 20px 80px; }
+    #intro { color: var(--dim); font-size: 14px; line-height: 1.6; margin-bottom: 26px; }
+    a.session { display: block; text-decoration: none; color: inherit; background: var(--panel); border: 1px solid #3a2f20; border-left: 3px solid var(--gold); border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; transition: border-color .15s, background .15s; }
+    a.session:hover { background: #241c13; border-color: var(--gold); }
+    .s-title { color: var(--gold); font-size: 18px; margin-bottom: 4px; }
+    .s-date { color: var(--dim); font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+    .s-stats { color: var(--dim); font-size: 13px; font-style: italic; }
+    .s-stats b { color: var(--ink); font-style: normal; font-weight: normal; }
+    .s-sealed { float: right; color: var(--dim); font-size: 11px; letter-spacing: 2px; border: 1px solid #3a2f20; border-radius: 6px; padding: 3px 8px; margin-left: 10px; }
+    #empty { color: var(--dim); font-style: italic; text-align: center; padding: 40px 0; }
+</style>
+</head>
+<body>
+<header>
+    <h1>SOULED — THE ARCHIVE</h1>
+    <p>Round Table sessions on Scripture &amp; Philosophy — "Come now, let us reason together" (Isaiah 1:18)</p>
+</header>
+
+<div id="wrap">
+    <div id="intro">Every session below is sealed. Choose one and enter the passphrase you were given to read the transcript, hear it delivered, and join the conversation.</div>
+    <div id="list"><div id="empty">Consulting the archive…</div></div>
+</div>
+
+<script>
+const WORKER_URL = 'https://souled.ftaquest.workers.dev';
+const list = document.getElementById('list');
+
+function plural(n, word) { return n + ' ' + word + (n === 1 ? '' : 's'); }
+
+async function load() {
+    let manifest = [];
+    try { manifest = await (await fetch('manifest.json')).json(); } catch (_) {}
+    if (!manifest.length) {
+        document.getElementById('empty').textContent = 'The archive is empty — the first session is yet to be filed.';
+        return;
+    }
+    let stats = {};
+    try { stats = await (await fetch(WORKER_URL + '/archive')).json(); } catch (_) {}
+
+    list.innerHTML = '';
+    for (const s of manifest) {
+        const st = stats[s.slug] || { questions: 0, answers: 0, messages: 0 };
+        const a = document.createElement('a');
+        a.className = 'session';
+        a.href = s.slug + '/';
+
+        const sealed = document.createElement('span');
+        sealed.className = 's-sealed';
+        sealed.textContent = 'SEALED';
+        a.appendChild(sealed);
+
+        const t = document.createElement('div');
+        t.className = 's-title';
+        t.textContent = s.title;
+        a.appendChild(t);
+
+        const d = document.createElement('div');
+        d.className = 's-date';
+        d.textContent = s.date;
+        a.appendChild(d);
+
+        const line = document.createElement('div');
+        line.className = 's-stats';
+        line.innerHTML = 'From the floor: <b>' + plural(st.questions, 'question') + '</b> · <b>'
+            + plural(st.answers, 'answer') + ' from Souled</b> · <b>' + plural(st.messages, 'message') + '</b>';
+        a.appendChild(line);
+
+        list.appendChild(a);
+    }
+}
+load();
+</script>
+</body>
+</html>
