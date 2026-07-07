@@ -38,6 +38,22 @@
     .tbtn:hover { background: #2a2318; }
     #pos { color: var(--dim); font-size: 13px; min-width: 48px; }
     #pclose { margin-left: auto; border-color: #6b5a3e; color: var(--dim); }
+    #join { max-width: 820px; margin: 36px auto 0; border-top: 1px solid #3a2f20; padding-top: 22px; }
+    #join-toggle { background: var(--panel); color: var(--gold); border: 1px solid var(--gold); border-radius: 10px; padding: 12px 22px; font-family: inherit; font-size: 15px; cursor: pointer; }
+    #join-toggle:hover { background: #2a2318; }
+    #join-panel { margin-top: 18px; background: var(--panel); border: 1px solid #3a2f20; border-radius: 10px; padding: 18px; }
+    #join-panel[hidden] { display: none; }
+    .jrow { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+    .jrow > * { flex: 1; min-width: 160px; }
+    #join-panel input, #join-panel select, #join-panel textarea { background: var(--bg); border: 1px solid #3a2f20; border-radius: 8px; color: var(--ink); font-family: inherit; font-size: 15px; padding: 11px; outline: none; }
+    #join-panel input:focus, #join-panel select:focus, #join-panel textarea:focus { border-color: var(--gold); }
+    #join-panel textarea { width: 100%; min-height: 90px; resize: vertical; margin-bottom: 12px; }
+    #j-send { background: var(--gold); color: #14100c; border: none; border-radius: 8px; padding: 11px 24px; font-family: inherit; font-size: 15px; cursor: pointer; }
+    #j-send:disabled { opacity: .5; cursor: default; }
+    #j-note { color: var(--dim); font-size: 13px; font-style: italic; margin-top: 10px; min-height: 18px; }
+    .jlabel { display: block; font-size: 11px; letter-spacing: 2px; color: var(--dim); margin-bottom: 5px; }
+    .msg.visitor { background: var(--user); border-left: 3px solid #4a6b3e; }
+    .visitor-name { display: block; font-size: 11px; letter-spacing: 2px; color: var(--dim); margin-bottom: 4px; }
 </style>
 </head>
 <body>
@@ -58,6 +74,37 @@
 <div id="content" hidden>
     <div id="summary"></div>
     <div id="log"></div>
+    <div id="join">
+        <button id="join-toggle">🖋 Join the Conversation</button>
+        <div id="join-panel" hidden>
+            <div class="jrow">
+                <div>
+                    <span class="jlabel">YOUR NAME (OPTIONAL)</span>
+                    <input id="j-name" placeholder="Anonymous" maxlength="60" autocomplete="off" style="width:100%">
+                </div>
+                <div>
+                    <span class="jlabel">DIRECTED TO</span>
+                    <select id="j-to" style="width:100%">
+                        <option value="roundtable">Round Table</option>
+                        <option value="souled">Souled</option>
+                        <option value="jeremy">Jeremy</option>
+                    </select>
+                </div>
+                <div>
+                    <span class="jlabel">TYPE</span>
+                    <select id="j-kind" style="width:100%">
+                        <option value="question">Question</option>
+                        <option value="rebuttal">Rebuttal</option>
+                        <option value="starter">Convo Starter</option>
+                        <option value="statement">Statement</option>
+                    </select>
+                </div>
+            </div>
+            <textarea id="j-text" placeholder="Speak your mind…" maxlength="2000"></textarea>
+            <button id="j-send">Submit</button>
+            <div id="j-note"></div>
+        </div>
+    </div>
 </div>
 
 <div id="player" hidden>
@@ -86,7 +133,10 @@ const ffBtn  = document.getElementById('ff');
 const pos    = document.getElementById('pos');
 const pclose = document.getElementById('pclose');
 
+const WORKER_URL = 'https://souled.ftaquest.workers.dev';
+
 let key = null;
+let sessionData = null;
 const blobCache = new Map();
 
 async function deriveKey(passphrase, saltB64) {
@@ -195,6 +245,7 @@ async function unlock() {
         const meta = await (await fetch('meta.json')).json();
         key = await deriveKey(pass, meta.salt);
         const data = JSON.parse(new TextDecoder().decode(await decryptFile('data.enc')));
+        sessionData = data;
         document.title = 'Souled — ' + data.title;
         document.getElementById('subtitle').textContent = data.title + ' — ' + data.date;
         summaryEl.appendChild(document.createTextNode(data.summary));
@@ -208,6 +259,98 @@ async function unlock() {
 
 document.getElementById('unlock').onclick = unlock;
 passEl.addEventListener('keydown', e => { if (e.key === 'Enter') unlock(); });
+
+// ---- Join the Conversation ----
+const joinToggle = document.getElementById('join-toggle');
+const joinPanel  = document.getElementById('join-panel');
+const jName = document.getElementById('j-name');
+const jTo   = document.getElementById('j-to');
+const jKind = document.getElementById('j-kind');
+const jText = document.getElementById('j-text');
+const jSend = document.getElementById('j-send');
+const jNote = document.getElementById('j-note');
+
+const slug = location.pathname.replace(/\/$/, '').split('/').pop() || 'unknown';
+
+function visitorId() {
+    let v = localStorage.getItem('souled-visitor');
+    if (!v) { v = crypto.randomUUID().slice(0, 16); localStorage.setItem('souled-visitor', v); }
+    return v;
+}
+
+function updateNote() {
+    if (jTo.value === 'souled' && jKind.value === 'question') {
+        const used = parseInt(localStorage.getItem('souled-q-' + slug)) || 0;
+        jNote.textContent = used >= 2
+            ? 'You have used both of your questions to Souled for this session.'
+            : `Souled will answer you here. You have ${2 - used} of 2 questions remaining.`;
+    } else if (jTo.value === 'souled') {
+        jNote.textContent = 'Filed to the mailbag — Souled takes up rebuttals and statements in the next edition.';
+    } else {
+        jNote.textContent = 'Filed to the mailbag for ' + (jTo.value === 'jeremy' ? 'Jeremy' : 'the Round Table') + '.';
+    }
+}
+jTo.onchange = updateNote;
+jKind.onchange = updateNote;
+
+joinToggle.onclick = () => {
+    joinPanel.hidden = !joinPanel.hidden;
+    if (!joinPanel.hidden) { updateNote(); jText.focus(); }
+};
+
+function addVisitorMsg(name, text) {
+    const d = document.createElement('div');
+    d.className = 'msg visitor';
+    const n = document.createElement('span');
+    n.className = 'visitor-name';
+    n.textContent = name.toUpperCase();
+    d.appendChild(n);
+    d.appendChild(document.createTextNode(text));
+    log.appendChild(d);
+    return d;
+}
+
+jSend.onclick = async () => {
+    const text = jText.value.trim();
+    if (!text) return;
+    jSend.disabled = true;
+    jNote.textContent = 'sending…';
+    try {
+        const res = await fetch(WORKER_URL + '/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                session: slug,
+                name: jName.value.trim(),
+                to: jTo.value,
+                kind: jKind.value,
+                text,
+                visitor: visitorId(),
+                context: sessionData ? (sessionData.title + ' — ' + sessionData.summary) : '',
+            }),
+        });
+        const data = await res.json();
+        if (data.error) { jNote.textContent = data.error; jSend.disabled = false; return; }
+
+        addVisitorMsg(jName.value.trim() || 'Anonymous', text);
+        jText.value = '';
+
+        if (data.reply) {
+            addMsg('souled', data.reply, null);
+            const used = (parseInt(localStorage.getItem('souled-q-' + slug)) || 0) + 1;
+            localStorage.setItem('souled-q-' + slug, String(used));
+            jNote.textContent = data.remaining > 0
+                ? `Answered. You have ${data.remaining} question${data.remaining === 1 ? '' : 's'} to Souled remaining.`
+                : 'Answered. That was your last question to Souled for this session.';
+        } else {
+            jNote.textContent = data.notice || 'Filed to the mailbag. Thank you for joining the conversation.';
+        }
+        log.lastChild.scrollIntoView({ behavior: 'smooth' });
+    } catch (err) {
+        jNote.textContent = 'Could not send: ' + err.message;
+    }
+    jSend.disabled = false;
+};
 </script>
 </body>
 </html>
