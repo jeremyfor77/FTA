@@ -20,6 +20,8 @@
     .s-date { color: var(--dim); font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
     .s-stats { color: var(--dim); font-size: 13px; font-style: italic; }
     .s-stats b { color: var(--ink); font-style: normal; font-weight: normal; }
+    .s-voices { color: var(--dim); font-size: 13px; margin-bottom: 6px; }
+    .s-voices b { color: var(--gold); font-weight: normal; }
     .s-sealed { float: right; color: var(--dim); font-size: 11px; letter-spacing: 2px; border: 1px solid #3a2f20; border-radius: 6px; padding: 3px 8px; margin-left: 10px; }
     #empty { color: var(--dim); font-style: italic; text-align: center; padding: 40px 0; }
 </style>
@@ -72,6 +74,25 @@ async function load() {
         d.className = 's-date';
         d.textContent = s.date;
         a.appendChild(d);
+
+        const voices = {};
+        for (const [n, c] of Object.entries(s.speakers || {})) voices[n] = (voices[n] || 0) + c;
+        for (const [n, c] of Object.entries(st.voices || {})) voices[n] = (voices[n] || 0) + c;
+        if (Object.keys(voices).length) {
+            const v = document.createElement('div');
+            v.className = 's-voices';
+            v.appendChild(document.createTextNode('Voices: '));
+            const order = Object.keys(voices).sort((x, y) =>
+                (x === 'Jeremy' ? 0 : x === 'Souled' ? 1 : 2) - (y === 'Jeremy' ? 0 : y === 'Souled' ? 1 : 2)
+                || voices[y] - voices[x]);
+            order.forEach((n2, i) => {
+                if (i) v.appendChild(document.createTextNode(' · '));
+                const b = document.createElement('b');
+                b.textContent = n2 + ' ×' + voices[n2];
+                v.appendChild(b);
+            });
+            a.appendChild(v);
+        }
 
         const line = document.createElement('div');
         line.className = 's-stats';

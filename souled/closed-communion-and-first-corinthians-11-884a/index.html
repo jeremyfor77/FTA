@@ -54,6 +54,9 @@
     .jlabel { display: block; font-size: 11px; letter-spacing: 2px; color: var(--dim); margin-bottom: 5px; }
     .msg.visitor { background: var(--user); border-left: 3px solid #4a6b3e; }
     .visitor-name { display: block; font-size: 11px; letter-spacing: 2px; color: var(--dim); margin-bottom: 4px; }
+    .visitor-name .vkind { color: #7d9a6b; }
+    #floor { margin-top: 36px; }
+    #floor-head { text-align: center; letter-spacing: 4px; font-size: 12px; color: var(--gold); border-top: 1px solid #3a2f20; padding-top: 20px; margin-bottom: 18px; }
 </style>
 </head>
 <body>
@@ -74,6 +77,10 @@
 <div id="content" hidden>
     <div id="summary"></div>
     <div id="log"></div>
+    <div id="floor" hidden>
+        <div id="floor-head">FROM THE FLOOR</div>
+        <div id="floor-items"></div>
+    </div>
     <div id="join">
         <button id="join-toggle">🖋 Join the Conversation</button>
         <div id="join-panel" hidden>
@@ -221,7 +228,7 @@ ffBtn.onclick = () => { if (playlist.active) { playlist.idx++; playCurrent(); } 
 pclose.onclick = () => stopAudio();
 
 // ---- Unlock & render ----
-function addMsg(role, text, audio) {
+function addMsg(role, text, audio, parent) {
     const d = document.createElement('div');
     d.className = 'msg ' + (role === 'user' ? 'user' : 'souled');
     d.textContent = text;
@@ -234,7 +241,7 @@ function addMsg(role, text, audio) {
         b.onclick = () => playAnswer(audio, label);
         d.appendChild(b);
     }
-    log.appendChild(d);
+    (parent || log).appendChild(d);
 }
 
 async function unlock() {
@@ -252,6 +259,7 @@ async function unlock() {
         for (const m of data.messages) addMsg(m.role, m.text, m.audio);
         gate.hidden = true;
         content.hidden = false;
+        loadFloor();
     } catch (_) {
         gateErr.textContent = 'That passphrase did not open the seal. Check it and try again.';
     }
@@ -298,16 +306,42 @@ joinToggle.onclick = () => {
     if (!joinPanel.hidden) { updateNote(); jText.focus(); }
 };
 
-function addVisitorMsg(name, text) {
+const floorEl    = document.getElementById('floor');
+const floorItems = document.getElementById('floor-items');
+
+const KIND_LABEL = { question: 'QUESTION', rebuttal: 'REBUTTAL', starter: 'CONVO STARTER', statement: 'STATEMENT' };
+const TO_LABEL   = { roundtable: 'THE ROUND TABLE', jeremy: 'JEREMY', souled: 'SOULED' };
+
+function addVisitorMsg(name, kind, to, text) {
     const d = document.createElement('div');
     d.className = 'msg visitor';
     const n = document.createElement('span');
     n.className = 'visitor-name';
-    n.textContent = name.toUpperCase();
+    n.textContent = (name || 'Anonymous').toUpperCase() + ' · ';
+    const k = document.createElement('span');
+    k.className = 'vkind';
+    k.textContent = (KIND_LABEL[kind] || kind.toUpperCase())
+        + (to && to !== 'souled' ? ' → ' + (TO_LABEL[to] || to.toUpperCase()) : '');
+    n.appendChild(k);
     d.appendChild(n);
     d.appendChild(document.createTextNode(text));
-    log.appendChild(d);
+    floorItems.appendChild(d);
     return d;
+}
+
+function renderFloorEntry(m) {
+    addVisitorMsg(m.name, m.kind, m.to, m.text);
+    if (m.reply) addMsg('souled', m.reply, null, floorItems);
+    floorEl.hidden = false;
+}
+
+async function loadFloor() {
+    try {
+        const items = await (await fetch(WORKER_URL + '/floor?session=' + encodeURIComponent(slug))).json();
+        floorItems.innerHTML = '';
+        for (const m of items) renderFloorEntry(m);
+        floorEl.hidden = floorItems.children.length === 0;
+    } catch (_) {}
 }
 
 jSend.onclick = async () => {
@@ -332,11 +366,14 @@ jSend.onclick = async () => {
         const data = await res.json();
         if (data.error) { jNote.textContent = data.error; jSend.disabled = false; return; }
 
-        addVisitorMsg(jName.value.trim() || 'Anonymous', text);
+        renderFloorEntry({
+            name: jName.value.trim() || 'Anonymous',
+            kind: jKind.value, to: jTo.value, text,
+            reply: data.reply || null,
+        });
         jText.value = '';
 
         if (data.reply) {
-            addMsg('souled', data.reply, null);
             const used = (parseInt(localStorage.getItem('souled-q-' + slug)) || 0) + 1;
             localStorage.setItem('souled-q-' + slug, String(used));
             jNote.textContent = data.remaining > 0
@@ -345,7 +382,7 @@ jSend.onclick = async () => {
         } else {
             jNote.textContent = data.notice || 'Filed to the mailbag. Thank you for joining the conversation.';
         }
-        log.lastChild.scrollIntoView({ behavior: 'smooth' });
+        floorItems.lastChild.scrollIntoView({ behavior: 'smooth' });
     } catch (err) {
         jNote.textContent = 'Could not send: ' + err.message;
     }
