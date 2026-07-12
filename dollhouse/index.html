@@ -396,7 +396,32 @@ body[data-view="mansion"] #mansionView{display:block}
 .room-body{padding:6px 14px 22px}
 .room-body > .hero{background:none}
 
+/* ---------- dollhouse radio ---------- */
+.radio{position:fixed; left:18px; bottom:18px; z-index:60; display:flex; align-items:center; gap:10px}
+.radio-toggle{
+  width:58px; height:58px; border-radius:50%; border:3px solid var(--brand); background:var(--surface);
+  font-size:1.7rem; line-height:1; cursor:pointer; box-shadow:0 5px 0 var(--brand-dk);
+  transition:transform .15s;
+}
+.radio-toggle:active{transform:translateY(3px); box-shadow:0 2px 0 var(--brand-dk)}
+.radio-panel{
+  display:flex; align-items:center; gap:8px; background:var(--surface);
+  border:3px solid var(--brand); border-radius:999px; padding:8px 12px;
+  box-shadow:0 8px 20px var(--shadow);
+}
+.radio-panel[hidden]{display:none}
+.radio-btn{
+  font-size:1.3rem; line-height:1; background:var(--ground2); border:2px solid var(--line);
+  border-radius:50%; width:46px; height:46px; cursor:pointer; transition:transform .12s;
+}
+.radio-btn:hover{transform:scale(1.1)}
+.radio-title{font-weight:800; font-size:.92rem; max-width:170px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.radio-note{display:inline-block; color:var(--brand); font-size:1.15rem}
+.radio.playing .radio-note{animation:bounceNote .6s infinite alternate}
+@keyframes bounceNote{from{transform:translateY(1px)}to{transform:translateY(-4px)}}
+
 @media (max-width:820px){
+  .radio-title{max-width:80px}
   .hero-in{grid-template-columns:1fr; padding:40px 0 50px}
   .steps,.grown-grid{grid-template-columns:1fr}
   .magic{grid-template-columns:1fr}
@@ -1048,6 +1073,18 @@ body[data-view="mansion"] #mansionView{display:block}
   Dollhouse Studio · part of fta.quest
 </footer>
 
+<div class="radio" id="radio">
+  <button class="radio-toggle" id="radioToggle" aria-label="Dollhouse Radio" title="Dollhouse Radio">📻</button>
+  <div class="radio-panel" id="radioPanel" hidden>
+    <span class="radio-note" aria-hidden="true">♪</span>
+    <span class="radio-title" id="radioTitle">Dollhouse Radio</span>
+    <button class="radio-btn" id="radioPlay" aria-label="Play music">▶️</button>
+    <button class="radio-btn" id="radioNext" aria-label="Next song">⏭️</button>
+    <button class="radio-btn" id="radioVol" aria-label="Volume: loud">🔊</button>
+  </div>
+</div>
+<audio id="radioAudio" preload="none"></audio>
+
 <div class="room-overlay" id="roomOverlay">
   <div class="room-panel" role="dialog" aria-modal="true" aria-labelledby="roomTitle">
     <div class="room-head">
@@ -1185,6 +1222,65 @@ body[data-view="mansion"] #mansionView{display:block}
     dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.remove('dragover'); });
   });
   dz.addEventListener('drop', function(e){ showFile(e.dataTransfer.files[0]); });
+
+  var radioBox = document.getElementById('radio');
+  var rToggle = document.getElementById('radioToggle');
+  var rPanel = document.getElementById('radioPanel');
+  var rPlay = document.getElementById('radioPlay');
+  var rNext = document.getElementById('radioNext');
+  var rVol = document.getElementById('radioVol');
+  var rTitle = document.getElementById('radioTitle');
+  var rAudio = document.getElementById('radioAudio');
+  var tracks = [], ti = 0;
+  var vols = [
+    { v:0.8,  ico:'🔊', label:'Volume: loud'  },
+    { v:0.35, ico:'🔉', label:'Volume: quiet' },
+    { v:0,    ico:'🔇', label:'Volume: muted' }
+  ];
+  var vi = 0;
+  try { vi = parseInt(localStorage.getItem('dh-vol') || '0', 10) || 0; } catch(e){}
+  if (vi < 0 || vi >= vols.length) vi = 0;
+
+  function niceName(f){ return f.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' '); }
+  function paintVol(){ rVol.textContent = vols[vi].ico; rVol.setAttribute('aria-label', vols[vi].label); rAudio.volume = vols[vi].v; }
+  function loadTrack(i){
+    ti = ((i % tracks.length) + tracks.length) % tracks.length;
+    rAudio.src = 'radio/' + encodeURIComponent(tracks[ti]);
+    rTitle.textContent = niceName(tracks[ti]);
+  }
+  function setPlaying(on){
+    rPlay.textContent = on ? '⏸️' : '▶️';
+    rPlay.setAttribute('aria-label', on ? 'Pause music' : 'Play music');
+    radioBox.classList.toggle('playing', on);
+  }
+  rToggle.addEventListener('click', function(){ rPanel.hidden = !rPanel.hidden; });
+  rPlay.addEventListener('click', function(){
+    if (!tracks.length) return;
+    if (rAudio.paused){ paintVol(); rAudio.play(); } else { rAudio.pause(); }
+  });
+  rNext.addEventListener('click', function(){
+    if (!tracks.length) return;
+    var wasPlaying = !rAudio.paused;
+    loadTrack(ti + 1);
+    if (wasPlaying){ paintVol(); rAudio.play(); }
+  });
+  rVol.addEventListener('click', function(){
+    vi = (vi + 1) % vols.length;
+    try { localStorage.setItem('dh-vol', String(vi)); } catch(e){}
+    paintVol();
+  });
+  rAudio.addEventListener('play', function(){ setPlaying(true); });
+  rAudio.addEventListener('pause', function(){ setPlaying(false); });
+  rAudio.addEventListener('ended', function(){ loadTrack(ti + 1); paintVol(); rAudio.play(); });
+  paintVol();
+
+  fetch('radio/playlist.json')
+    .then(function(r){ if (!r.ok) throw new Error('no playlist'); return r.json(); })
+    .then(function(d){
+      tracks = (d && d.tracks) || [];
+      if (tracks.length){ loadTrack(0); } else { rTitle.textContent = 'No songs yet!'; }
+    })
+    .catch(function(){ rTitle.textContent = 'No songs yet!'; });
 })();
 </script>
 
