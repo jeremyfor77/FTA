@@ -1,4 +1,4 @@
-<title>Perceives — Pack Break</title>
+<title>PERCEIVEES — Pack Break</title>
 <style>
   :root{
     --ground:#101018; --surface:#1A1C26; --surface-2:#232636; --ink:#ECEDF4; --ink-soft:#989CB2;
@@ -106,7 +106,7 @@
 </style>
 
 <div class="bar">
-  <div class="brand"><p class="eyebrow">Perceives · Pack Break</p><h1>PERCEIVES PRIME · 10-Card Pack</h1></div>
+  <div class="brand"><p class="eyebrow">PERCEIVEES · Pack Break</p><h1>PERCEIVEES · 10-Card Pack</h1></div>
   <div class="ripsel" id="ripsel" role="group" aria-label="Rip style">
     <button data-s="scatter" aria-pressed="true">✶ Scatter</button>
     <button data-s="lotus" aria-pressed="false">✿ Lotus</button>
@@ -142,7 +142,7 @@
 </div>
 <div class="fx" id="fxlayer"></div>
 
-<footer>Perceives · cards render the real drawn frame v1 (1500×2100). Creature art is still pending — everything else is production geometry. Striations begin at Wandering and expand with class; angle is genome-seeded, so no two cards shimmer alike.</footer>
+<footer>PERCEIVEES · cards render the real drawn frame v1 (1500×2100). Creature art is still pending — everything else is production geometry. Striations begin at Wandering and expand with class; angle is genome-seeded, so no two cards shimmer alike.</footer>
 
 <script>
 // Type accents are LOCKED — see frame-design-v1.md §3. `d` must match exactly; `l` is its light tint.
@@ -422,7 +422,7 @@ ${[[1335,"SOFT RESONANCE","Fills Composure. Never harms.",20,1],[1525,"ROLLING H
 <g>
   <rect x="300" y="1850" width="1140" height="125" rx="20" fill="${K.lo}" opacity=".14"/>
   <rect x="300" y="1850" width="1140" height="125" rx="20" fill="url(#guil-${u})" opacity=".45"/>
-  <text x="326" y="1898" font-family="var(--font-m)" font-size="22" letter-spacing="2" fill="var(--ink2)">PERCEIVES · SET 01 · THE AWAKENING</text>
+  <text x="326" y="1898" font-family="var(--font-m)" font-size="22" letter-spacing="2" fill="var(--ink2)">PERCEIVEES · SET 01 · THE AWAKENING</text>
   <text x="326" y="1938" font-family="var(--font-m)" font-size="22" letter-spacing="2" fill="var(--ink2)" opacity=".8">${c.hash}</text>
   <text x="1414" y="1898" text-anchor="end" font-family="var(--font-m)" font-size="22" letter-spacing="2" fill="var(--ink2)">${c.cls===4?'★ 1 / 1':(c.id+1<10?'00':'0')+(c.id+1)+' / 108'}</text>
   ${serial}
@@ -436,66 +436,59 @@ ${striations}
 </svg>`;
 }
 function backSVG(id){
+  // Card back. The window is EMPTY by design: every card back must be identical,
+  // or a player can identify cards face-down. See brand-mark-v1.md 3b.
   return `<svg viewBox="0 0 300 420" xmlns="http://www.w3.org/2000/svg"><defs>
-   <radialGradient id="bg${id}" cx="50%" cy="42%" r="72%"><stop offset="0" stop-color="#2A2440"/><stop offset="1" stop-color="#131120"/></radialGradient>
-   <linearGradient id="bs${id}" x1="0" y1="0" x2="1" y2="1" gradientUnits="userSpaceOnUse"><stop offset=".4" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#b9c6ff" stop-opacity=".2"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/></linearGradient>
+   <radialGradient id="bg${id}" cx="50%" cy="42%" r="72%"><stop offset="0" stop-color="#17151B"/><stop offset="1" stop-color="#0E0D10"/></radialGradient>
+   <linearGradient id="bs${id}" x1="0" y1="0" x2="1" y2="1" gradientUnits="userSpaceOnUse"><stop offset=".4" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#b9c6ff" stop-opacity=".18"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/></linearGradient>
    <clipPath id="bc${id}"><rect x="8" y="8" width="284" height="404" rx="16"/></clipPath></defs>
    <g clip-path="url(#bc${id})"><rect x="8" y="8" width="284" height="404" fill="url(#bg${id})"/>
-    <g stroke="#8FA5D2" fill="none" opacity=".5"><circle cx="150" cy="176" r="34" stroke-width="3"/><circle cx="150" cy="176" r="60" stroke-width="2.4"/><circle cx="150" cy="176" r="88" stroke-width="1.8"/><circle cx="150" cy="176" r="118" stroke-width="1.3"/></g>
-    <ellipse cx="150" cy="176" rx="46" ry="30" fill="#EAE8F2"/><circle cx="150" cy="176" r="18" fill="#8FA5D2"/><circle cx="150" cy="176" r="8" fill="#131120"/><ellipse cx="150" cy="176" rx="46" ry="30" fill="none" stroke="#3a3550" stroke-width="2.5"/>
-    <text x="150" y="332" text-anchor="middle" font-family="var(--font-d)" font-weight="700" font-size="28" letter-spacing="7" fill="#C9CEE6">PERCEIVES</text>
-    <text x="150" y="354" text-anchor="middle" font-family="var(--font-m)" font-size="10" letter-spacing="5" fill="#726f92">SENSE &amp; SEEK</text>
-    <rect x="11" y="11" width="278" height="398" rx="14" fill="none" stroke="#3a3550" stroke-width="4"/>
+    <clipPath id="rc${id}"><circle cx="128.2" cy="125.3" r="23.9"/></clipPath><rect x="124.7" y="121.8" width="56.5" height="12.9" rx="3.2" fill="#4e5c4b" transform="rotate(0.0 152.9 128.2)"/><rect x="121.7" y="118.9" width="56.5" height="12.9" rx="3.2" fill="#8FA98A" transform="rotate(0.0 150.0 125.3)"/><rect x="161.9" y="137.2" width="56.5" height="12.9" rx="3.2" fill="#6e7177" transform="rotate(45.0 190.2 143.7)"/><rect x="159.0" y="134.3" width="56.5" height="12.9" rx="3.2" fill="#C9CEDA" transform="rotate(45.0 187.3 140.7)"/><rect x="177.4" y="174.5" width="56.5" height="12.9" rx="3.2" fill="#3c4964" transform="rotate(90.0 205.6 180.9)"/><rect x="174.4" y="171.6" width="56.5" height="12.9" rx="3.2" fill="#6E86B7" transform="rotate(90.0 202.7 178.0)"/><rect x="161.9" y="211.8" width="56.5" height="12.9" rx="3.2" fill="#3d5958" transform="rotate(135.0 190.2 218.2)"/><rect x="159.0" y="208.8" width="56.5" height="12.9" rx="3.2" fill="#6FA3A0" transform="rotate(135.0 187.3 215.3)"/><rect x="124.7" y="227.2" width="56.5" height="12.9" rx="3.2" fill="#4d483e" transform="rotate(180.0 152.9 233.6)"/><rect x="121.7" y="224.3" width="56.5" height="12.9" rx="3.2" fill="#8C8371" transform="rotate(180.0 150.0 230.7)"/><rect x="87.4" y="211.8" width="56.5" height="12.9" rx="3.2" fill="#694737" transform="rotate(-135.0 115.7 218.2)"/><rect x="84.5" y="208.8" width="56.5" height="12.9" rx="3.2" fill="#C08265" transform="rotate(-135.0 112.7 215.3)"/><rect x="72.0" y="174.5" width="56.5" height="12.9" rx="3.2" fill="#55455c" transform="rotate(-90.0 100.2 180.9)"/><rect x="69.0" y="171.6" width="56.5" height="12.9" rx="3.2" fill="#9B7FA8" transform="rotate(-90.0 97.3 178.0)"/><rect x="87.4" y="137.2" width="56.5" height="12.9" rx="3.2" fill="#6c5a35" transform="rotate(-45.0 115.7 143.7)"/><rect x="84.5" y="134.3" width="56.5" height="12.9" rx="3.2" fill="#C6A462" transform="rotate(-45.0 112.7 140.7)"/><g clip-path="url(#rc${id})"><rect x="124.7" y="121.8" width="56.5" height="12.9" rx="3.2" fill="#4e5c4b" transform="rotate(0.0 152.9 128.2)"/><rect x="121.7" y="118.9" width="56.5" height="12.9" rx="3.2" fill="#8FA98A" transform="rotate(0.0 150.0 125.3)"/></g>
+    <text x="150" y="330" text-anchor="middle" font-family="var(--font-d)" font-weight="800" font-size="26" letter-spacing="4" fill="#EDEAF0">PERCEIVEES</text>
+    <text x="150" y="352" text-anchor="middle" font-family="var(--font-m)" font-size="9" letter-spacing="3" fill="#9A94A6">NOT EVERYTHING CAN BE SEEN</text>
+    <text x="150" y="372" text-anchor="middle" font-family="var(--font-m)" font-size="7.5" letter-spacing="5" fill="#6E6A78">SERIES #1</text>
+    <rect x="11" y="11" width="278" height="398" rx="14" fill="none" stroke="#2E2A36" stroke-width="4"/>
     <rect x="8" y="8" width="284" height="404" fill="url(#bs${id})" style="mix-blend-mode:screen"/></g></svg>`;
 }
 
 /* ---------- pack wrapper ---------- */
 function packFront(){
   return `<svg viewBox="0 0 300 500" xmlns="http://www.w3.org/2000/svg"><defs>
-   <linearGradient id="pw" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b2b6e"/><stop offset=".4" stop-color="#2f7fa6"/><stop offset=".7" stop-color="#4a3f8f"/><stop offset="1" stop-color="#c9a24a"/></linearGradient>
-   <radialGradient id="sw" cx="50%" cy="56%" r="55%"><stop offset="0" stop-color="#dfe8ff" stop-opacity=".9"/><stop offset=".5" stop-color="#8fb6d8" stop-opacity=".25"/><stop offset="1" stop-color="#2b2b6e" stop-opacity="0"/></radialGradient>
-   <linearGradient id="fol" x1="0" y1="0" x2="1" y2="1" gradientUnits="userSpaceOnUse"><stop offset=".35" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".35"/><stop offset=".65" stop-color="#fff" stop-opacity="0"/></linearGradient>
+   <linearGradient id="pw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#17151B"/><stop offset=".5" stop-color="#0E0D10"/><stop offset="1" stop-color="#17151B"/></linearGradient>
+   <radialGradient id="sw" cx="50%" cy="50%" r="55%"><stop offset="0" stop-color="#9B7FA8" stop-opacity=".22"/><stop offset="1" stop-color="#0E0D10" stop-opacity="0"/></radialGradient>
+   <linearGradient id="fol" x1="0" y1="0" x2="1" y2="1" gradientUnits="userSpaceOnUse"><stop offset=".35" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".28"/><stop offset=".65" stop-color="#fff" stop-opacity="0"/></linearGradient>
    <clipPath id="pc"><rect x="6" y="6" width="288" height="488" rx="12"/></clipPath></defs>
    <g clip-path="url(#pc)">
     <rect x="6" y="6" width="288" height="488" fill="url(#pw)"/>
-    <g opacity=".5"><path d="M-40 300 Q150 160 340 300 Q150 440 -40 300 Z" fill="url(#sw)"/></g>
-    <circle cx="150" cy="278" r="96" fill="url(#sw)" opacity=".6"/>
-    <!-- crimp -->
-    <rect x="6" y="6" width="288" height="20" fill="#e9e2c0" opacity=".8"/><rect x="6" y="474" width="288" height="20" fill="#e9e2c0" opacity=".8"/>
+    <circle cx="150" cy="286" r="120" fill="url(#sw)"/>
+    <rect x="6" y="6" width="288" height="20" fill="#e9e2c0" opacity=".75"/><rect x="6" y="474" width="288" height="20" fill="#e9e2c0" opacity=".75"/>
     <line x1="6" y1="16" x2="294" y2="16" stroke="#b8ad7a" stroke-dasharray="4 4"/>
-    <!-- top brand -->
-    <rect x="86" y="34" width="128" height="26" rx="6" fill="#f4f1e6"/><text x="150" y="52" text-anchor="middle" font-family="var(--font-d)" font-weight="700" font-size="14" letter-spacing="1" fill="#2b2b6e">PRESSTINE ✦</text>
-    <text x="150" y="78" text-anchor="middle" font-family="var(--font-m)" font-size="8" letter-spacing="3" fill="#e8ecff">TRADING CARD PACKS · EST 2026</text>
-    <!-- title -->
-    <text x="150" y="118" text-anchor="middle" font-family="var(--font-d)" font-weight="700" font-size="40" letter-spacing="1" fill="#fff" style="paint-order:stroke;stroke:#2b2b6e;stroke-width:3">PERCEIVES</text>
-    <text x="150" y="150" text-anchor="middle" font-family="var(--font-d)" font-weight="700" font-size="26" letter-spacing="6" fill="#F4D98B">★ PRIME ★</text>
-    <text x="150" y="172" text-anchor="middle" font-family="var(--font-b)" font-size="12" letter-spacing="4" fill="#e8ecff">SENSE · SEEK</text>
-    <!-- count badge -->
-    <rect x="26" y="196" width="96" height="40" rx="8" fill="#F4D98B"/><text x="44" y="224" font-family="var(--font-d)" font-weight="800" font-size="26" fill="#2b2b6e">10</text><text x="74" y="215" font-family="var(--font-d)" font-weight="700" font-size="12" fill="#2b2b6e">CARDS</text><text x="74" y="228" font-family="var(--font-b)" font-size="9" fill="#2b2b6e">CARTES</text>
-    <rect x="150" y="196" width="124" height="40" rx="8" fill="#ffffff22" stroke="#ffffff55"/><text x="212" y="214" text-anchor="middle" font-family="var(--font-b)" font-size="9" fill="#eef2ff">INCLUDES 2 PRIME CARDS</text><text x="212" y="228" text-anchor="middle" font-family="var(--font-b)" font-size="8" fill="#cfd6f0">2 CARTES PRIME INCLUSES</text>
-    <!-- emblem: eye in swirl -->
-    <g transform="translate(150,300)"><circle r="70" fill="#0f1030" opacity=".5"/>
-     <g stroke="#cfe0ff" fill="none" opacity=".6"><circle r="30"/><circle r="48"/><circle r="66"/></g>
-     <ellipse rx="46" ry="30" fill="#EAE8F2"/><circle r="18" fill="#6E86B7"/><circle r="8" fill="#0f1030"/><ellipse rx="46" ry="30" fill="none" stroke="#2b2b6e" stroke-width="3"/></g>
-    <!-- mirrored bottom logo -->
-    <text x="150" y="430" text-anchor="middle" font-family="var(--font-d)" font-weight="700" font-size="34" letter-spacing="1" fill="#ffffff55" transform="rotate(180 150 420)">PERCEIVES</text>
+    <rect x="86" y="34" width="128" height="24" rx="6" fill="#EDEAF0"/><text x="150" y="51" text-anchor="middle" font-family="var(--font-d)" font-weight="700" font-size="13" letter-spacing="1" fill="#0E0D10">PRESSTINE &#10022;</text>
+    <text x="150" y="74" text-anchor="middle" font-family="var(--font-m)" font-size="7.5" letter-spacing="3" fill="#9A94A6">TRADING CARD PACKS &#183; EST 2026</text>
+    <text x="150" y="116" text-anchor="middle" font-family="var(--font-d)" font-weight="800" font-size="33" letter-spacing="2" fill="#EDEAF0">PERCEIVEES</text>
+    <text x="150" y="140" text-anchor="middle" font-family="var(--font-m)" font-size="9" letter-spacing="3" fill="#9A94A6">NOT EVERYTHING CAN BE SEEN</text>
+    <text x="150" y="162" text-anchor="middle" font-family="var(--font-m)" font-size="8" letter-spacing="5" fill="#6E6A78">SERIES #1</text>
+    <rect x="26" y="184" width="96" height="38" rx="8" fill="#C6A462"/><text x="44" y="211" font-family="var(--font-d)" font-weight="800" font-size="24" fill="#0E0D10">10</text><text x="74" y="202" font-family="var(--font-d)" font-weight="700" font-size="11" fill="#0E0D10">CARDS</text><text x="74" y="215" font-family="var(--font-b)" font-size="8.5" fill="#0E0D10">CARTES</text>
+    <rect x="150" y="184" width="124" height="38" rx="8" fill="#ffffff14" stroke="#ffffff33"/><text x="212" y="201" text-anchor="middle" font-family="var(--font-b)" font-size="8.5" fill="#EDEAF0">INCLUDES 2 PRIME CARDS</text><text x="212" y="215" text-anchor="middle" font-family="var(--font-b)" font-size="7.5" fill="#9A94A6">2 CARTES PRIME INCLUSES</text>
+    <clipPath id="rcpf"><circle cx="123.4" cy="235.8" r="29.1"/></clipPath><rect x="119.2" y="231.6" width="68.8" height="15.7" rx="3.9" fill="#4e5c4b" transform="rotate(0.0 153.6 239.4)"/><rect x="115.6" y="228.0" width="68.8" height="15.7" rx="3.9" fill="#8FA98A" transform="rotate(0.0 150.0 235.8)"/><rect x="164.5" y="250.4" width="68.8" height="15.7" rx="3.9" fill="#6e7177" transform="rotate(45.0 198.9 258.2)"/><rect x="161.0" y="246.8" width="68.8" height="15.7" rx="3.9" fill="#C9CEDA" transform="rotate(45.0 195.4 254.6)"/><rect x="183.3" y="295.7" width="68.8" height="15.7" rx="3.9" fill="#3c4964" transform="rotate(90.0 217.7 303.6)"/><rect x="179.7" y="292.2" width="68.8" height="15.7" rx="3.9" fill="#6E86B7" transform="rotate(90.0 214.2 300.0)"/><rect x="164.5" y="341.1" width="68.8" height="15.7" rx="3.9" fill="#3d5958" transform="rotate(135.0 198.9 348.9)"/><rect x="161.0" y="337.5" width="68.8" height="15.7" rx="3.9" fill="#6FA3A0" transform="rotate(135.0 195.4 345.4)"/><rect x="119.2" y="359.9" width="68.8" height="15.7" rx="3.9" fill="#4d483e" transform="rotate(180.0 153.6 367.7)"/><rect x="115.6" y="356.3" width="68.8" height="15.7" rx="3.9" fill="#8C8371" transform="rotate(180.0 150.0 364.2)"/><rect x="73.8" y="341.1" width="68.8" height="15.7" rx="3.9" fill="#694737" transform="rotate(-135.0 108.2 348.9)"/><rect x="70.2" y="337.5" width="68.8" height="15.7" rx="3.9" fill="#C08265" transform="rotate(-135.0 104.6 345.4)"/><rect x="55.0" y="295.7" width="68.8" height="15.7" rx="3.9" fill="#55455c" transform="rotate(-90.0 89.4 303.6)"/><rect x="51.4" y="292.2" width="68.8" height="15.7" rx="3.9" fill="#9B7FA8" transform="rotate(-90.0 85.8 300.0)"/><rect x="73.8" y="250.4" width="68.8" height="15.7" rx="3.9" fill="#6c5a35" transform="rotate(-45.0 108.2 258.2)"/><rect x="70.2" y="246.8" width="68.8" height="15.7" rx="3.9" fill="#C6A462" transform="rotate(-45.0 104.6 254.6)"/><g clip-path="url(#rcpf)"><rect x="119.2" y="231.6" width="68.8" height="15.7" rx="3.9" fill="#4e5c4b" transform="rotate(0.0 153.6 239.4)"/><rect x="115.6" y="228.0" width="68.8" height="15.7" rx="3.9" fill="#8FA98A" transform="rotate(0.0 150.0 235.8)"/></g>
+    <text x="150" y="424" text-anchor="middle" font-family="var(--font-d)" font-weight="800" font-size="28" letter-spacing="2" fill="#EDEAF018" transform="rotate(180 150 415)">PERCEIVEES</text>
     <rect x="6" y="6" width="288" height="488" fill="url(#fol)" style="mix-blend-mode:screen"/>
-    <rect x="6" y="6" width="288" height="488" rx="12" fill="none" stroke="#1c1c48" stroke-width="3"/></g></svg>`;
+    <rect x="6" y="6" width="288" height="488" rx="12" fill="none" stroke="#2E2A36" stroke-width="3"/></g></svg>`;
 }
 function packBack(){
   return `<svg viewBox="0 0 300 500" xmlns="http://www.w3.org/2000/svg"><defs>
-   <linearGradient id="pb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c1c48"/><stop offset="1" stop-color="#141232"/></linearGradient>
+   <linearGradient id="pb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#17151B"/><stop offset="1" stop-color="#0E0D10"/></linearGradient>
    <clipPath id="pcb"><rect x="6" y="6" width="288" height="488" rx="12"/></clipPath></defs>
    <g clip-path="url(#pcb)"><rect x="6" y="6" width="288" height="488" fill="url(#pb)"/>
-    <rect x="6" y="6" width="288" height="20" fill="#e9e2c0" opacity=".8"/><rect x="6" y="474" width="288" height="20" fill="#e9e2c0" opacity=".8"/>
-    <g stroke="#8FA5D2" fill="none" opacity=".4"><circle cx="150" cy="150" r="30"/><circle cx="150" cy="150" r="52"/><circle cx="150" cy="150" r="74"/></g>
-    <ellipse cx="150" cy="150" rx="40" ry="26" fill="#EAE8F2"/><circle cx="150" cy="150" r="15" fill="#8FA5D2"/><circle cx="150" cy="150" r="7" fill="#141232"/>
-    <text x="150" y="250" text-anchor="middle" font-family="var(--font-d)" font-weight="700" font-size="22" letter-spacing="5" fill="#C9CEE6">PERCEIVES</text>
-    <text x="40" y="300" font-family="var(--font-b)" font-size="9" fill="#8b8fb0">Collect all 8 senses. Evolve · Merge · Breed · Duel.</text>
-    <text x="40" y="318" font-family="var(--font-b)" font-size="9" fill="#8b8fb0">Every card a one-of-a-kind Perceivee.</text>
-    <rect x="40" y="360" width="150" height="34" fill="#fff"/><g fill="#141232">${[0,6,10,18,24,30,34,42,48,54,62,70,76,84,92,100,108,118,126,132].map(x=>`<rect x="${44+x}" y="364" width="${(x%7)?2:4}" height="26"/>`).join('')}</g>
-    <text x="210" y="384" font-family="var(--font-m)" font-size="9" fill="#8b8fb0">SET 001</text>
-    <rect x="6" y="6" width="288" height="488" rx="12" fill="none" stroke="#0e0e2c" stroke-width="3"/></g></svg>`;
+    <rect x="6" y="6" width="288" height="20" fill="#e9e2c0" opacity=".75"/><rect x="6" y="474" width="288" height="20" fill="#e9e2c0" opacity=".75"/>
+    <clipPath id="rcpb"><circle cx="131.5" cy="107.3" r="20.3"/></clipPath><rect x="128.5" y="104.4" width="47.9" height="10.9" rx="2.7" fill="#4e5c4b" transform="rotate(0.0 152.5 109.8)"/><rect x="126.0" y="101.9" width="47.9" height="10.9" rx="2.7" fill="#8FA98A" transform="rotate(0.0 150.0 107.3)"/><rect x="160.1" y="117.4" width="47.9" height="10.9" rx="2.7" fill="#6e7177" transform="rotate(45.0 184.1 122.9)"/><rect x="157.6" y="114.9" width="47.9" height="10.9" rx="2.7" fill="#C9CEDA" transform="rotate(45.0 181.6 120.4)"/><rect x="173.2" y="149.0" width="47.9" height="10.9" rx="2.7" fill="#3c4964" transform="rotate(90.0 197.2 154.5)"/><rect x="170.7" y="146.5" width="47.9" height="10.9" rx="2.7" fill="#6E86B7" transform="rotate(90.0 194.7 152.0)"/><rect x="160.1" y="180.6" width="47.9" height="10.9" rx="2.7" fill="#3d5958" transform="rotate(135.0 184.1 186.1)"/><rect x="157.6" y="178.1" width="47.9" height="10.9" rx="2.7" fill="#6FA3A0" transform="rotate(135.0 181.6 183.6)"/><rect x="128.5" y="193.7" width="47.9" height="10.9" rx="2.7" fill="#4d483e" transform="rotate(180.0 152.5 199.2)"/><rect x="126.0" y="191.2" width="47.9" height="10.9" rx="2.7" fill="#8C8371" transform="rotate(180.0 150.0 196.7)"/><rect x="96.9" y="180.6" width="47.9" height="10.9" rx="2.7" fill="#694737" transform="rotate(-135.0 120.9 186.1)"/><rect x="94.4" y="178.1" width="47.9" height="10.9" rx="2.7" fill="#C08265" transform="rotate(-135.0 118.4 183.6)"/><rect x="83.9" y="149.0" width="47.9" height="10.9" rx="2.7" fill="#55455c" transform="rotate(-90.0 107.8 154.5)"/><rect x="81.4" y="146.5" width="47.9" height="10.9" rx="2.7" fill="#9B7FA8" transform="rotate(-90.0 105.3 152.0)"/><rect x="96.9" y="117.4" width="47.9" height="10.9" rx="2.7" fill="#6c5a35" transform="rotate(-45.0 120.9 122.9)"/><rect x="94.4" y="114.9" width="47.9" height="10.9" rx="2.7" fill="#C6A462" transform="rotate(-45.0 118.4 120.4)"/><g clip-path="url(#rcpb)"><rect x="128.5" y="104.4" width="47.9" height="10.9" rx="2.7" fill="#4e5c4b" transform="rotate(0.0 152.5 109.8)"/><rect x="126.0" y="101.9" width="47.9" height="10.9" rx="2.7" fill="#8FA98A" transform="rotate(0.0 150.0 107.3)"/></g>
+    <text x="150" y="250" text-anchor="middle" font-family="var(--font-d)" font-weight="800" font-size="20" letter-spacing="3" fill="#EDEAF0">PERCEIVEES</text>
+    <text x="150" y="270" text-anchor="middle" font-family="var(--font-m)" font-size="7.5" letter-spacing="2" fill="#9A94A6">EVERY SENSE IS A WAY THROUGH</text>
+    <text x="40" y="304" font-family="var(--font-b)" font-size="9" fill="#9A94A6">Collect all 8 senses. Evolve &#183; Merge &#183; Breed &#183; Trial.</text>
+    <text x="40" y="320" font-family="var(--font-b)" font-size="9" fill="#9A94A6">Every card a one-of-a-kind CeVee.</text>
+    <rect x="40" y="360" width="150" height="34" fill="#fff"/><g fill="#0E0D10">${[0,6,10,18,24,30,34,42,48,54,62,70,76,84,92,100,108,118,126,132].map(x=>`<rect x="${44+x}" y="364" width="${(x%7)?2:4}" height="26"/>`).join('')}</g>
+    <text x="210" y="384" font-family="var(--font-m)" font-size="9" fill="#6E6A78">SET 001</text>
+    <rect x="6" y="6" width="288" height="488" rx="12" fill="none" stroke="#2E2A36" stroke-width="3"/></g></svg>`;
 }
 
 /* ---------- state ---------- */
