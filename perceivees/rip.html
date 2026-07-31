@@ -1,0 +1,717 @@
+<title>Perceives — Pack Break</title>
+<style>
+  :root{
+    --ground:#101018; --surface:#1A1C26; --surface-2:#232636; --ink:#ECEDF4; --ink-soft:#989CB2;
+    --hairline:#2B2E3E; --accent:#8FA5D2; --gold:#D9B36A; --shadow:rgba(0,0,0,.55);
+    --font-d:"Segoe UI Semibold","SF Pro Display",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    --font-b:"Segoe UI","SF Pro Text",system-ui,-apple-system,Arial,sans-serif;
+    --font-m:"Cascadia Code","SF Mono",Consolas,ui-monospace,monospace;
+  }
+  :root[data-theme="light"]{--ground:#E7E5DE;--surface:#F3F1EB;--surface-2:#FAF8F3;--ink:#262830;--ink-soft:#5B5F6B;--hairline:#D2CFC6;--accent:#5E77AB;--shadow:rgba(40,40,55,.22);}
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  /* Drag surfaces must never select text. Without this, dragging a card sweep-selects
+     the SVG <text> inside it (name, Composure, rules text) and paints it blue.
+     -webkit-touch-callout also kills the iOS long-press "save image" sheet. */
+  .opener,.tray,.controls,.hero,.pack3d,.topcard,.slot,.card{
+    user-select:none;-webkit-user-select:none;-ms-user-select:none;-webkit-touch-callout:none;}
+  .opener svg,.tray svg,.hero svg{pointer-events:none;}
+  body{margin:0;min-height:100%;background:radial-gradient(130% 90% at 50% -15%,color-mix(in srgb,var(--accent) 15%,transparent),transparent 55%),var(--ground);
+    color:var(--ink);font-family:var(--font-b);-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;}
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 22px;flex-wrap:wrap;}
+  .brand .eyebrow{font-family:var(--font-m);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);margin:0;}
+  .brand h1{font-family:var(--font-d);font-weight:600;font-size:clamp(19px,3.4vw,26px);margin:2px 0 0;letter-spacing:-.01em;}
+  .toggle{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--ink);user-select:none;}
+  .toggle input{position:absolute;opacity:0;width:0;height:0;}
+  .switch{width:42px;height:24px;border-radius:20px;background:var(--hairline);position:relative;transition:background .18s;flex:none;}
+  .switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--surface-2);transition:transform .18s;box-shadow:0 1px 3px rgba(0,0,0,.4);}
+  .toggle input:checked + .switch{background:var(--accent);}
+  .toggle input:checked + .switch::after{transform:translateX(18px);}
+  .toggle input:focus-visible + .switch{outline:2px solid var(--accent);outline-offset:2px;}
+  .toggle small{color:var(--ink-soft);font-size:11px;}
+  .ripsel{display:flex;background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:3px;gap:2px;}
+  .ripsel button{appearance:none;border:0;background:transparent;color:var(--ink-soft);font-family:var(--font-d);font-weight:600;font-size:12.5px;padding:8px 13px;border-radius:7px;cursor:pointer;transition:background .15s,color .15s;}
+  .ripsel button:hover{color:var(--ink);}
+  .ripsel button[aria-pressed="true"]{background:var(--accent);color:#fff;}
+  .ripsel button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .ripfx{position:fixed;inset:0;pointer-events:none;z-index:45;overflow:hidden;}
+  .piece{position:fixed;overflow:hidden;will-change:transform,opacity;border-radius:6px;}
+  /* NB: these MUST stay child (>) selectors, not descendant. The drawn frame contains
+     nested <g> art; a descendant `svg` rule would also hit any nested svg and blow it up
+     to the full 1500×2100 viewport, burying the card. */
+  .piece > svg{width:100%;height:100%;display:block;}
+
+  .stage{flex:1;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px;}
+  .opener{position:relative;height:clamp(300px,46vh,440px);width:100%;display:flex;align-items:center;justify-content:center;perspective:1500px;}
+  .status{font-family:var(--font-m);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);text-align:center;min-height:16px;}
+
+  /* PACK */
+  .pack3d{position:relative;width:min(58vw,238px);aspect-ratio:3/5;transform-style:preserve-3d;cursor:grab;touch-action:none;transition:transform .5s cubic-bezier(.2,.7,.2,1);will-change:transform;}
+  .pack3d.dragging{cursor:grabbing;transition:none;}
+  .pack3d.ripping{transition:transform .5s ease-in,opacity .5s;transform:scale(1.06);opacity:0;}
+  .pface{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:12px;overflow:hidden;box-shadow:0 26px 54px var(--shadow);}
+  .pface > svg{width:100%;height:100%;display:block;}
+  .pfront{transform:rotateY(0) translateZ(1px);}
+  .pback{transform:rotateY(180deg) translateZ(1px);}
+  .tear{position:absolute;left:-4%;right:-4%;height:26px;top:0;z-index:5;pointer-events:none;
+    background:repeating-linear-gradient(90deg,#e9e2c0 0 7px,transparent 7px 14px);opacity:.0;transition:opacity .2s,transform .5s;}
+
+  /* revealed top card in opener */
+  .topcard{position:absolute;width:min(52vw,214px);aspect-ratio:5/7;transform-style:preserve-3d;cursor:grab;touch-action:none;will-change:transform;}
+  .topcard.dragging{cursor:grabbing;}
+  .topcard.snap{transition:transform .4s cubic-bezier(.2,.8,.2,1);}
+  .depth{position:absolute;width:min(52vw,214px);aspect-ratio:5/7;border-radius:14px;background:linear-gradient(160deg,#26233a,#15131f);border:1px solid #322d47;box-shadow:0 12px 26px var(--shadow);}
+  .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;overflow:hidden;box-shadow:0 18px 40px var(--shadow);}
+  .face > svg{width:100%;height:100%;display:block;}
+  .fr{transform:rotateY(0) translateZ(1px);}
+  .bk{transform:rotateY(180deg) translateZ(1px);}
+  .inv .fr>*, .inv .bk>*{}
+  svg.up{transform:rotate(180deg);transform-origin:center;}
+
+  .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:center;min-height:46px;}
+  button.ctl{appearance:none;border:1px solid var(--hairline);background:var(--surface);color:var(--ink);font-family:var(--font-d);font-weight:600;font-size:14px;padding:11px 20px;border-radius:11px;cursor:pointer;display:inline-flex;gap:8px;align-items:center;transition:border-color .15s,transform .1s,background .15s;}
+  button.ctl:hover{border-color:var(--accent);}
+  button.ctl:active{transform:translateY(1px);}
+  button.ctl.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+  button.ctl.ghost{background:transparent;}
+  button.ctl:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .hint{font-family:var(--font-m);font-size:11px;color:var(--ink-soft);text-align:center;min-height:14px;letter-spacing:.02em;}
+
+  /* TRAY */
+  .tray{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;width:100%;max-width:640px;}
+  @media (max-width:520px){.tray{grid-template-columns:repeat(5,1fr);gap:6px;}}
+  .slot{aspect-ratio:5/7;border-radius:10px;border:1.5px dashed var(--hairline);position:relative;display:flex;align-items:center;justify-content:center;}
+  .slot .num{font-family:var(--font-m);font-size:12px;color:var(--hairline);}
+  .slot.filled{border-style:solid;border-color:transparent;cursor:pointer;}
+  .slot .card{position:absolute;inset:0;border-radius:10px;overflow:hidden;transform-style:preserve-3d;transition:transform .45s;box-shadow:0 8px 18px var(--shadow);}
+  .slot .card .face{border-radius:10px;}
+  .slot .card.flipped{transform:rotateY(180deg);}
+  .slot.pop{animation:pop .4s ease;}
+  @keyframes pop{0%{transform:scale(.6);opacity:0;}70%{transform:scale(1.06);}100%{transform:scale(1);opacity:1;}}
+
+  /* HERO overlay */
+  .hero{position:fixed;inset:0;background:color-mix(in srgb,var(--ground) 82%,black);backdrop-filter:blur(4px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:40;padding:20px;text-align:center;}
+  .hero.show{display:flex;}
+  .hero .halo{width:min(66vw,300px);aspect-ratio:5/7;border-radius:18px;overflow:hidden;box-shadow:0 0 60px 6px var(--halo,#8FA5D2),0 30px 60px rgba(0,0,0,.6);animation:rise .6s cubic-bezier(.2,.8,.2,1);}
+  .hero .halo > svg{width:100%;height:100%;display:block;}
+  @keyframes rise{from{transform:translateY(40px) scale(.85);opacity:0;}to{transform:none;opacity:1;}}
+  .hero .label{font-family:var(--font-d);font-weight:600;font-size:20px;}
+  .hero .tier{font-family:var(--font-m);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);}
+  .fx{position:fixed;inset:0;pointer-events:none;z-index:41;overflow:hidden;}
+  .spark{position:absolute;width:8px;height:8px;border-radius:2px;will-change:transform,opacity;}
+
+  footer{padding:12px 16px 22px;text-align:center;color:var(--ink-soft);font-size:11.5px;font-family:var(--font-m);}
+  .hidden{display:none !important;}
+  @media (prefers-reduced-motion:reduce){.pack3d,.topcard.snap,.slot .card,.hero .halo{transition:none!important;animation:none!important;}}
+</style>
+
+<div class="bar">
+  <div class="brand"><p class="eyebrow">Perceives · Pack Break</p><h1>PERCEIVES PRIME · 10-Card Pack</h1></div>
+  <div class="ripsel" id="ripsel" role="group" aria-label="Rip style">
+    <button data-s="scatter" aria-pressed="true">✶ Scatter</button>
+    <button data-s="lotus" aria-pressed="false">✿ Lotus</button>
+  </div>
+  <label class="toggle"><input type="checkbox" id="fx" checked><span class="switch"></span>
+    <span>Effects <small>(fireworks · sound soon)</small></span></label>
+</div>
+
+<div class="stage">
+  <div class="status" id="status">Spin the pack — however it's oriented is how the cards come out</div>
+
+  <div class="opener" id="opener">
+    <!-- SEALED PACK -->
+    <div class="pack3d" id="pack">
+      <div class="tear" id="tear"></div>
+      <div class="pface pfront" id="pfront"></div>
+      <div class="pface pback" id="pback"></div>
+    </div>
+    <!-- depth stack + top card injected here after rip -->
+  </div>
+
+  <div class="controls" id="controls"></div>
+  <p class="hint" id="hint">Drag to rotate the sealed pack in 3D.</p>
+
+  <div class="tray" id="tray"></div>
+</div>
+
+<div class="hero" id="hero">
+  <div class="halo" id="heroCard"></div>
+  <div class="label" id="heroLabel"></div>
+  <div class="tier" id="heroTier"></div>
+  <button class="ctl primary" id="again">Open another pack ↻</button>
+</div>
+<div class="fx" id="fxlayer"></div>
+
+<footer>Perceives · cards render the real drawn frame v1 (1500×2100). Creature art is still pending — everything else is production geometry. Striations begin at Wandering and expand with class; angle is genome-seeded, so no two cards shimmer alike.</footer>
+
+<script>
+// Type accents are LOCKED — see frame-design-v1.md §3. `d` must match exactly; `l` is its light tint.
+// Body is #8C8371 (cooled 2026-07-29 so it can't converge with Taste under gold finishes).
+const SENSES=[
+  {n:"Sound",name:"Booma",d:"#6E86B7",l:"#93A8D0"},{n:"Touch",name:"Velvi",d:"#C08265",l:"#D3A184"},
+  {n:"Inner-sense",name:"Inny",d:"#9B7FA8",l:"#BBA2C6"},{n:"Sight",name:"Sight",d:"#C9CEDA",l:"#DFE3EB"},
+  {n:"Scent",name:"Scent",d:"#8FA98A",l:"#B0C2AC"},{n:"Taste",name:"Taste",d:"#C6A462",l:"#DBC08D"},
+  {n:"Balance",name:"Balance",d:"#6FA3A0",l:"#9AC0BE"},{n:"Body",name:"Body",d:"#8C8371",l:"#B0A99B"}];
+// Class table. Border hexes are LOCKED — see frame-design-v1.md §2. Do not re-tint here.
+// lo/hi/core/node complete the ramp the drawn frame needs (perceives-frame-v1.svg).
+// Pack odds: Mythic is w:0 by ruling (2026-07-29) — Mythic exists ONLY by passing The All-Seeing.
+// Weights must always sum to 100 with Mythic at 0. See sprite-genome-logic-v1.md §8.1.
+const CLASSES=[
+  {n:"Hatchling",t:"Common",   b:"#8A93A0",lo:"#5C6470",hi:"#B6BEC8",core:"#EDEBE6",node:"#C3CAD3",nodes:1,eye:1,comp:60, w:55},
+  {n:"Wandering",t:"Uncommon", b:"#7F9478",lo:"#54654F",hi:"#A9BCA2",core:"#EDEBE6",node:"#AFC2A7",nodes:2,eye:2,comp:95, w:25},
+  {n:"Awakened", t:"Rare",     b:"#A8705F",lo:"#6F463A",hi:"#CD9C8B",core:"#141216",node:"#D4A695",nodes:3,eye:3,comp:140,w:13},
+  {n:"Luminary", t:"Epic",     b:"#3A3742",lo:"#211F27",hi:"#6E687C",core:"#141216",node:"#C9AE79",nodes:4,eye:4,comp:190,w:7},
+  {n:"Mythic",   t:"Legendary",b:"aurora", lo:"#3D4A57",hi:"#CFE0E4",core:"#0E0D10",node:"#DCE7EA",nodes:5,eye:5,comp:260,w:0}];
+
+// Striation escalation — sprite-genome-logic-v1.md §5. Begins at Wandering, expands with class.
+// cov = coverage mask · amp = amplitude · freq = period in px (smaller = finer) · travel = tilt shift.
+// ANGLE + SEED come from the genome, not the class, so two same-class cards shimmer differently.
+const FINISH=[
+  {cov:"none",  amp:0,    freq:0,  travel:0},
+  {cov:"frame", amp:0.15, freq:30, travel:0.2},
+  {cov:"edge",  amp:0.40, freq:23, travel:0.5},
+  {cov:"full",  amp:0.70, freq:17, travel:0.8},
+  {cov:"full",  amp:1.00, freq:12, travel:1.0}];
+const $=id=>document.getElementById(id), rnd=a=>a[Math.floor(Math.random()*a.length)];
+function rollClass(){let t=CLASSES.reduce((s,c)=>s+c.w,0),r=Math.random()*t;for(let i=0;i<5;i++){r-=CLASSES[i].w;if(r<=0)return i;}return 0;}
+// Halo/spark colour: type hue normally, aurora for Mythic. Class owns richness, type owns hue.
+function heroColor(c){return CLASSES[c.cls].b==='aurora'?'#C9A0C6':c.sense.d;}
+
+/* ============================================================================
+   THE DRAWN FRAME — ported from assets/frame/perceives-frame-v1.svg (1500×2100).
+   Geometry is LOCKED to card-frame-anatomy-v1.md §6. Do not move zone rects.
+
+   Two problems this solves that a straight copy-paste would not:
+   (a) SVG ids are DOCUMENT-global, so ten frames on screen would all resolve
+       url(#grad-border) to the first one and render identically. Every internal
+       id is therefore suffixed with a per-instance uid.
+   (b) The source frame is an attribute-driven switchboard (8 crests × 3 slots,
+       5 eye states, 5 nodes, all toggled by CSS). Emitting only what a card
+       actually needs keeps each instance to a fraction of the DOM.
+   ============================================================================ */
+let UID=0;
+const SENSE_HEX=Object.fromEntries(SENSES.map(s=>[s.n,s.d]));
+
+// The 8 sense crests — one family, stroke 6.5, round caps, one solid focal mark.
+const CREST={
+ Sight:`<g fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 50 Q50 20 86 50 Q50 80 14 50 Z"/><circle cx="50" cy="50" r="14"/><path d="M50 14 V6 M50 94 V86 M14 14 L20 20 M86 14 L80 20 M14 86 L20 80 M86 86 L80 80" stroke-width="5"/></g><circle cx="50" cy="50" r="5.5" fill="currentColor"/>`,
+ Sound:`<g fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round"><path d="M50 18 A32 32 0 1 1 27.4 27.4"/><path d="M50 32 A18 18 0 1 1 37.3 37.3"/><path d="M35 88 L18 88 M27 79 L12 79" stroke-width="5"/></g><circle cx="50" cy="50" r="7" fill="currentColor"/>`,
+ Scent:`<g fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round"><path d="M32 84 C32 66 44 64 44 48 C44 34 34 32 34 18"/><path d="M52 88 C52 62 66 60 66 42 C66 28 56 26 56 12"/><path d="M72 84 C72 70 82 66 82 54"/></g><circle cx="52" cy="94" r="5" fill="currentColor"/>`,
+ Taste:`<g fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 54 A34 34 0 0 0 84 54"/><path d="M50 12 C62 30 70 38 70 48 A20 20 0 0 1 30 48 C30 38 38 30 50 12 Z"/></g><circle cx="50" cy="50" r="6" fill="currentColor"/>`,
+ Touch:`<g fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"><rect x="30" y="30" width="40" height="40" rx="14"/><rect x="42" y="42" width="16" height="16" rx="7" stroke-width="5"/><path d="M22 26 C8 40 8 60 22 74"/><path d="M78 26 C92 40 92 60 78 74"/></g><circle cx="50" cy="86" r="5" fill="currentColor"/>`,
+ Balance:`<g fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="50" cy="38" r="22"/><path d="M58 38 A8 8 0 1 0 50 46 A16 16 0 1 0 66 30" stroke-width="4.5"/><path d="M18 68 H82"/><path d="M50 60 L36 88 H64 Z"/></g><circle cx="50" cy="68" r="5" fill="currentColor"/>`,
+ Body:`<g fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="50" cy="50" r="34"/><path d="M30 72 L44 50 L60 58 L72 34"/></g><circle cx="44" cy="50" r="6" fill="currentColor"/><circle cx="60" cy="58" r="6" fill="currentColor"/>`,
+ "Inner-sense":`<g fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"><path d="M50 10 C68 34 80 46 80 60 A30 30 0 0 1 20 60 C20 46 32 34 50 10 Z"/><path d="M50 40 C60 52 64 56 64 62 A14 14 0 0 1 36 62 C36 56 40 52 50 40 Z" stroke-width="5"/><path d="M50 90 V96 M22 84 L18 89 M78 84 L82 89" stroke-width="4.5"/></g><circle cx="50" cy="62" r="6" fill="currentColor"/>`};
+
+// Class badge: the brand ring accreting beams 1 -> 3 -> 5 -> 7 -> 8.
+// Only the closed Mythic ring is impossible. Generated by tools/badge_svg.py.
+const EYE=[0,
+ `<g fill="none" stroke="currentColor" stroke-width="2" opacity=".22"><rect x="99.8" y="42.5" width="61.5" height="14" rx="3.5" transform="rotate(45.0 130.5 49.5)"/><rect x="116.6" y="83.0" width="61.5" height="14" rx="3.5" transform="rotate(90.0 147.3 90.0)"/><rect x="99.8" y="123.5" width="61.5" height="14" rx="3.5" transform="rotate(135.0 130.5 130.5)"/><rect x="59.3" y="140.3" width="61.5" height="14" rx="3.5" transform="rotate(180.0 90.0 147.3)"/><rect x="18.8" y="123.5" width="61.5" height="14" rx="3.5" transform="rotate(-135.0 49.5 130.5)"/><rect x="2.0" y="83.0" width="61.5" height="14" rx="3.5" transform="rotate(-90.0 32.7 90.0)"/><rect x="18.8" y="42.5" width="61.5" height="14" rx="3.5" transform="rotate(-45.0 49.5 49.5)"/></g><g fill="currentColor"><rect x="59.3" y="25.7" width="61.5" height="14" rx="3.5" transform="rotate(0.0 90.0 32.7)"/></g>`,
+ `<g fill="none" stroke="currentColor" stroke-width="2" opacity=".22"><rect x="99.8" y="123.5" width="61.5" height="14" rx="3.5" transform="rotate(135.0 130.5 130.5)"/><rect x="59.3" y="140.3" width="61.5" height="14" rx="3.5" transform="rotate(180.0 90.0 147.3)"/><rect x="18.8" y="123.5" width="61.5" height="14" rx="3.5" transform="rotate(-135.0 49.5 130.5)"/><rect x="2.0" y="83.0" width="61.5" height="14" rx="3.5" transform="rotate(-90.0 32.7 90.0)"/><rect x="18.8" y="42.5" width="61.5" height="14" rx="3.5" transform="rotate(-45.0 49.5 49.5)"/></g><g fill="currentColor"><rect x="59.3" y="25.7" width="61.5" height="14" rx="3.5" transform="rotate(0.0 90.0 32.7)"/><rect x="99.8" y="42.5" width="61.5" height="14" rx="3.5" transform="rotate(45.0 130.5 49.5)"/><rect x="116.6" y="83.0" width="61.5" height="14" rx="3.5" transform="rotate(90.0 147.3 90.0)"/></g>`,
+ `<g fill="none" stroke="currentColor" stroke-width="2" opacity=".22"><rect x="18.8" y="123.5" width="61.5" height="14" rx="3.5" transform="rotate(-135.0 49.5 130.5)"/><rect x="2.0" y="83.0" width="61.5" height="14" rx="3.5" transform="rotate(-90.0 32.7 90.0)"/><rect x="18.8" y="42.5" width="61.5" height="14" rx="3.5" transform="rotate(-45.0 49.5 49.5)"/></g><g fill="currentColor"><rect x="59.3" y="25.7" width="61.5" height="14" rx="3.5" transform="rotate(0.0 90.0 32.7)"/><rect x="99.8" y="42.5" width="61.5" height="14" rx="3.5" transform="rotate(45.0 130.5 49.5)"/><rect x="116.6" y="83.0" width="61.5" height="14" rx="3.5" transform="rotate(90.0 147.3 90.0)"/><rect x="99.8" y="123.5" width="61.5" height="14" rx="3.5" transform="rotate(135.0 130.5 130.5)"/><rect x="59.3" y="140.3" width="61.5" height="14" rx="3.5" transform="rotate(180.0 90.0 147.3)"/></g>`,
+ `<g fill="none" stroke="currentColor" stroke-width="2" opacity=".22"><rect x="18.8" y="42.5" width="61.5" height="14" rx="3.5" transform="rotate(-45.0 49.5 49.5)"/></g><g fill="currentColor"><rect x="59.3" y="25.7" width="61.5" height="14" rx="3.5" transform="rotate(0.0 90.0 32.7)"/><rect x="99.8" y="42.5" width="61.5" height="14" rx="3.5" transform="rotate(45.0 130.5 49.5)"/><rect x="116.6" y="83.0" width="61.5" height="14" rx="3.5" transform="rotate(90.0 147.3 90.0)"/><rect x="99.8" y="123.5" width="61.5" height="14" rx="3.5" transform="rotate(135.0 130.5 130.5)"/><rect x="59.3" y="140.3" width="61.5" height="14" rx="3.5" transform="rotate(180.0 90.0 147.3)"/><rect x="18.8" y="123.5" width="61.5" height="14" rx="3.5" transform="rotate(-135.0 49.5 130.5)"/><rect x="2.0" y="83.0" width="61.5" height="14" rx="3.5" transform="rotate(-90.0 32.7 90.0)"/></g>`,
+ `<g fill="currentColor"><rect x="59.3" y="25.7" width="61.5" height="14" rx="3.5" transform="rotate(0.0 90.0 32.7)"/><rect x="99.8" y="42.5" width="61.5" height="14" rx="3.5" transform="rotate(45.0 130.5 49.5)"/><rect x="116.6" y="83.0" width="61.5" height="14" rx="3.5" transform="rotate(90.0 147.3 90.0)"/><rect x="99.8" y="123.5" width="61.5" height="14" rx="3.5" transform="rotate(135.0 130.5 130.5)"/><rect x="59.3" y="140.3" width="61.5" height="14" rx="3.5" transform="rotate(180.0 90.0 147.3)"/><rect x="18.8" y="123.5" width="61.5" height="14" rx="3.5" transform="rotate(-135.0 49.5 130.5)"/><rect x="2.0" y="83.0" width="61.5" height="14" rx="3.5" transform="rotate(-90.0 32.7 90.0)"/><rect x="18.8" y="42.5" width="61.5" height="14" rx="3.5" transform="rotate(-45.0 49.5 49.5)"/></g>`];
+
+const ART_OUT="364,235 1376,235 1440,299 1440,1096 1376,1160 364,1160 300,1096 300,299";
+const ART_IN ="364,253 1376,253 1422,299 1422,1096 1376,1142 364,1142 318,1096 318,299";
+
+// Perceptive Wheel (type-system-v1 §2): strong vs the next two clockwise, weak to the previous two.
+const WHEEL=["Scent","Sight","Sound","Balance","Body","Touch","Inner-sense","Taste"];
+function wheelRel(n){const i=WHEEL.indexOf(n),L=WHEEL.length;
+  return {strong:WHEEL[(i+1)%L], weak:WHEEL[(i+L-1)%L]};}
+
+function frontSVG(c){
+  const K=CLASSES[c.cls], F=FINISH[c.cls], u="f"+(UID++);
+  const acc=c.sense.d, acc2=c.sec.d, dual=c.cls>=2;
+  const border=K.b==='aurora'?`url(#au-${u})`:K.b, rel=wheelRel(c.sense.n);
+  // Genome-seeded: angle + phase are per CARD, so two same-class cards shimmer differently.
+  const ang=20+(c.seed%6)*13, phase=(c.seed>>3)%40;
+
+  // ---- awakening track: 5 sunk sockets, lit up to the class's node count ----
+  const nodes=[600,820,1040,1260,1480].map((y,i)=>{
+    const lit=i<K.nodes?`<g><circle cx="165" cy="${y}" r="31" fill="url(#gnode-${u})"/><polygon points="165,${y-25} 187,${y-12} 187,${y+12} 165,${y+25} 143,${y+12} 143,${y-12}" fill="none" stroke="${K.core}" stroke-width="2.5" opacity=".45"/><circle cx="158" cy="${y-8}" r="7" fill="#fff" opacity=".45"/></g>`:'';
+    return `<g><circle cx="165" cy="${y}" r="45" fill="${K.lo}" opacity=".5"/><circle cx="165" cy="${y}" r="45" fill="none" stroke="var(--sh)" stroke-width="3.5"/><circle cx="165" cy="${y}" r="41" fill="none" stroke="var(--lip)" stroke-width="2.5"/>${lit}</g>`;}).join('');
+
+  // ---- the 8 bevel facets: also the foil-normal steering geometry ----
+  const facets=[["364,235 1376,235 1376,253 364,253","ft"],["1376,235 1440,299 1422,299 1376,253","ftr"],
+    ["1440,299 1440,1096 1422,1096 1422,299","fr"],["1440,1096 1376,1160 1376,1142 1422,1096","fbr"],
+    ["1376,1160 364,1160 364,1142 1376,1142","fb"],["364,1160 300,1096 318,1096 364,1142","fbl"],
+    ["300,1096 300,299 318,299 318,1096","fl"],["300,299 364,235 364,253 318,299","ftl"]]
+    .map(f=>`<polygon points="${f[0]}" fill="url(#${f[1]}-${u})"/>`).join('');
+
+  const lineage=[1580,1680,1780,1880].map(y=>
+    `<rect x="75" y="${y}" width="90" height="90" rx="20" fill="${K.lo}" opacity=".42"/><rect x="77" y="${y+2}" width="86" height="86" rx="19" fill="none" stroke="var(--lip)" stroke-width="2"/><circle cx="120" cy="${y+45}" r="15" fill="${K.hi}" opacity=".5"/>`).join('');
+
+  // ---- striation coverage mask (see FINISH table) ----
+  const maskBody = F.cov==="full"
+    ? `<rect x="45" y="45" width="1410" height="2010" rx="60" fill="#fff"/>`
+    : F.cov==="edge"
+    ? `<rect x="45" y="45" width="1410" height="2010" rx="60" fill="#fff"/><rect x="286" y="60" width="1157" height="1980" fill="#000"/><polygon points="${ART_OUT}" fill="#fff"/><polygon points="${ART_IN}" fill="#000"/>`
+    : `<rect x="45" y="45" width="1410" height="2010" rx="60" fill="#fff"/><rect x="286" y="60" width="1157" height="1980" fill="#000"/>`;
+  const striations = F.amp===0 ? '' :
+    `<g mask="url(#smask-${u})" style="mix-blend-mode:screen" opacity="${(F.amp*0.55).toFixed(3)}">
+       <rect x="0" y="0" width="1500" height="2100" fill="url(#stri-${u})"/></g>`;
+
+  const serial = c.cls===4
+    ? `<g transform="translate(1290,1862)"><polygon points="50,0 90,20 90,80 50,100 10,80 10,20" fill="url(#au-${u})" opacity=".9"/><polygon points="50,8 83,24 83,76 50,92 17,76 17,24" fill="none" stroke="${K.core}" stroke-width="2.5"/><text x="50" y="60" text-anchor="middle" font-family="var(--font-d)" font-weight="700" font-size="34" fill="${K.core}">1/1</text></g>`:'';
+
+  return `<svg viewBox="0 0 1500 2100" xmlns="http://www.w3.org/2000/svg" style="--lip:#FFFFFF66;--sh:#2F2C3540;--eng:#2F2C3538;--ink:#2F2C35;--ink2:#6A6572">
+<defs>
+  <linearGradient id="au-${u}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7FB6C4"/><stop offset=".34" stop-color="#9B7FA8"/><stop offset=".66" stop-color="#C0A16B"/><stop offset="1" stop-color="#7FB6C4"/></linearGradient>
+  <linearGradient id="gb-${u}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${K.hi}"/><stop offset=".42" stop-color="${K.b==='aurora'?'#9B7FA8':K.b}"/><stop offset="1" stop-color="${K.lo}"/></linearGradient>
+  <linearGradient id="gbr-${u}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${K.lo}"/><stop offset=".58" stop-color="${K.b==='aurora'?'#9B7FA8':K.b}"/><stop offset="1" stop-color="${K.hi}"/></linearGradient>
+  <linearGradient id="gp-${u}" x1="0" y1="0" x2=".35" y2="1"><stop offset="0" stop-color="#F6F3ED"/><stop offset=".55" stop-color="#E9E5DD"/><stop offset="1" stop-color="#D6D1C6"/></linearGradient>
+  <linearGradient id="gs-${u}" x1="0" y1="0" x2="1" y2=".25"><stop offset="0" stop-color="${K.hi}"/><stop offset=".30" stop-color="${K.b==='aurora'?'#9B7FA8':K.b}"/><stop offset=".86" stop-color="${K.lo}"/><stop offset="1" stop-color="${K.b==='aurora'?'#9B7FA8':K.b}"/></linearGradient>
+  <linearGradient id="gg-${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".62"/><stop offset=".18" stop-color="#fff" stop-opacity=".26"/><stop offset="1" stop-color="#fff" stop-opacity=".10"/></linearGradient>
+  <linearGradient id="ga-${u}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${acc}" stop-opacity=".55"/><stop offset=".5" stop-color="${acc}"/><stop offset="1" stop-color="${acc}" stop-opacity=".55"/></linearGradient>
+  <radialGradient id="gnode-${u}" cx=".34" cy=".28" r=".85"><stop offset="0" stop-color="${K.node}"/><stop offset=".62" stop-color="${K.node}" stop-opacity=".85"/><stop offset="1" stop-color="${K.lo}"/></radialGradient>
+  <radialGradient id="gwell-${u}" cx=".5" cy=".5" r=".72"><stop offset="0" stop-color="#3A3742" stop-opacity=".10"/><stop offset="1" stop-color="#3A3742" stop-opacity=".30"/></radialGradient>
+  <linearGradient id="ft-${u}"  x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${K.lo}"/><stop offset="1" stop-color="${K.b==='aurora'?'#9B7FA8':K.b}" stop-opacity=".72"/></linearGradient>
+  <linearGradient id="fl-${u}"  x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${K.lo}"/><stop offset="1" stop-color="${K.b==='aurora'?'#9B7FA8':K.b}" stop-opacity=".82"/></linearGradient>
+  <linearGradient id="fb-${u}"  x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${K.hi}"/><stop offset="1" stop-color="${K.b==='aurora'?'#9B7FA8':K.b}"/></linearGradient>
+  <linearGradient id="fr-${u}"  x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="${K.hi}"/><stop offset="1" stop-color="${K.b==='aurora'?'#9B7FA8':K.b}"/></linearGradient>
+  <linearGradient id="ftl-${u}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${K.lo}"/><stop offset="1" stop-color="${K.b==='aurora'?'#9B7FA8':K.b}" stop-opacity=".7"/></linearGradient>
+  <linearGradient id="ftr-${u}" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${K.b==='aurora'?'#9B7FA8':K.b}"/><stop offset="1" stop-color="${K.lo}"/></linearGradient>
+  <linearGradient id="fbl-${u}" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="${K.b==='aurora'?'#9B7FA8':K.b}"/><stop offset="1" stop-color="${K.lo}" stop-opacity=".8"/></linearGradient>
+  <linearGradient id="fbr-${u}" x1="1" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${K.hi}"/><stop offset="1" stop-color="${K.b==='aurora'?'#9B7FA8':K.b}"/></linearGradient>
+  <clipPath id="ct-${u}"><rect x="45" y="45" width="1410" height="2010" rx="60" ry="60"/></clipPath>
+  <clipPath id="cs-${u}"><rect x="63" y="63" width="204" height="1974" rx="46" ry="46"/></clipPath>
+  <clipPath id="ca-${u}"><polygon points="${ART_IN}"/></clipPath>
+  <pattern id="tooth-${u}" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(24)"><path d="M0 7 H14" stroke="#2F2C35" stroke-opacity=".030"/><path d="M7 0 V14" stroke="#fff" stroke-opacity=".045"/></pattern>
+  <pattern id="guil-${u}" width="26" height="26" patternUnits="userSpaceOnUse"><path d="M0 26 L26 0 M-6 6 L6 -6 M20 32 L32 20" stroke="var(--eng)" stroke-width="1.1" fill="none"/></pattern>
+  ${F.amp?`<pattern id="stri-${u}" width="${F.freq}" height="${F.freq}" patternUnits="userSpaceOnUse" patternTransform="rotate(${ang}) translate(${phase},0)">
+    <rect x="0" width="${(F.freq*.16).toFixed(2)}" height="${F.freq}" fill="#ffffff" opacity=".90"/>
+    <rect x="${(F.freq*.30).toFixed(2)}" width="${(F.freq*.10).toFixed(2)}" height="${F.freq}" fill="#BFE3FF" opacity=".70"/>
+    <rect x="${(F.freq*.52).toFixed(2)}" width="${(F.freq*.08).toFixed(2)}" height="${F.freq}" fill="#FFD9EC" opacity=".60"/>
+   </pattern>
+   <mask id="smask-${u}">${maskBody}</mask>`:''}
+</defs>
+
+<rect x="0" y="0" width="1500" height="2100" fill="${K.lo}"/>
+<g clip-path="url(#ct-${u})">
+  <rect x="45" y="45" width="1410" height="2010" rx="60" fill="${K.core}"/>
+  <rect x="53" y="53" width="1394" height="1994" rx="54" fill="${K.b==='aurora'?`url(#au-${u})`:`url(#gb-${u})`}"/>
+  <path d="M53 400 V107 A54 54 0 0 1 107 53 H700" fill="none" stroke="var(--lip)" stroke-width="5"/>
+  <path d="M1447 1650 V1993 A54 54 0 0 1 1393 2047 H800" fill="none" stroke="var(--sh)" stroke-width="5"/>
+  <rect x="286" y="60" width="1157" height="1980" fill="url(#gp-${u})"/>
+  <rect x="286" y="60" width="1157" height="1980" fill="url(#tooth-${u})"/>
+  <rect x="286" y="60" width="26" height="1980" fill="var(--sh)" opacity=".55"/>
+  <rect x="286" y="60" width="5" height="1980" fill="${K.lo}"/>
+</g>
+
+<!-- SPINE RAIL: raised machined plate, 13 perception ripples centred on node 3 -->
+<g>
+  <rect x="63" y="63" width="204" height="1974" rx="46" fill="url(#gs-${u})"/>
+  <g clip-path="url(#cs-${u})" fill="none" stroke="var(--eng)">
+    ${[140,208,276,344,412,480,548,616,684,752,820,888,956].map((r,i)=>`<circle cx="165" cy="1040" r="${r}" stroke-width="${i%3===2?3:1.4}"/>`).join('')}
+    <g stroke="var(--lip)" stroke-width="1.2" opacity=".75">${[278,482,686,890].map(r=>`<circle cx="165" cy="1040" r="${r}"/>`).join('')}</g>
+  </g>
+  <path d="M63 1400 V109 A46 46 0 0 1 109 63 H220" fill="none" stroke="var(--lip)" stroke-width="4"/>
+  <path d="M267 700 V1991 A46 46 0 0 1 221 2037 H150" fill="none" stroke="var(--sh)" stroke-width="4"/>
+  <rect x="75" y="75" width="180" height="1950" rx="36" fill="none" stroke="${acc}" stroke-width="3" opacity=".5"/>
+</g>
+
+<!-- TYPE CREST(S) — the second crest appearing IS the dual-type reveal -->
+${dual?`<g>
+  <polygon points="90,75 186,75 218,107 218,203 186,235 90,235 58,203 58,107" fill="${K.lo}" opacity=".38"/>
+  <polygon points="93,79 183,79 214,110 214,200 183,231 93,231 62,200 62,110" fill="none" stroke="var(--lip)" stroke-width="2.5"/>
+  <polygon points="99,86 177,86 207,116 207,194 177,224 99,224 69,194 69,116" fill="none" stroke="${acc}" stroke-width="2.5" opacity=".85"/>
+  <g transform="translate(76,93) scale(1.24)" color="${acc}">${CREST[c.sense.n]}</g>
+  <polygon points="136,205 199,205 220,226 220,289 199,310 136,310 115,289 115,226" fill="${K.core}" opacity=".55"/>
+  <polygon points="138,208 197,208 217,228 217,287 197,307 138,307 118,287 118,228" fill="none" stroke="${acc2}" stroke-width="2.5"/>
+  <g transform="translate(127,217) scale(0.81)" color="${acc2}">${CREST[c.sec.n]}</g>
+ </g>`:`<g>
+  <polygon points="94,80 196,80 230,114 230,216 196,250 94,250 60,216 60,114" fill="${K.lo}" opacity=".38"/>
+  <polygon points="97,84 193,84 226,117 226,213 193,246 97,246 64,213 64,117" fill="none" stroke="var(--lip)" stroke-width="2.5"/>
+  <polygon points="103,92 187,92 218,123 218,207 187,238 103,238 72,207 72,123" fill="none" stroke="${acc}" stroke-width="2.5" opacity=".85"/>
+  <g transform="translate(80,100) scale(1.3)" color="${acc}">${CREST[c.sense.n]}</g>
+ </g>`}
+
+<!-- EYE BADGE: sunk socket, lit contents proud inside -->
+<g>
+  <circle cx="165" cy="440" r="92" fill="url(#gwell-${u})"/>
+  <circle cx="165" cy="440" r="92" fill="none" stroke="var(--sh)" stroke-width="4"/>
+  <circle cx="165" cy="440" r="88" fill="none" stroke="var(--lip)" stroke-width="3"/>
+  <g transform="translate(75,350)" color="${K.hi}">${EYE[K.eye]}</g>
+</g>
+
+<!-- AWAKENING TRACK -->
+<g>
+  <rect x="157" y="560" width="16" height="960" rx="8" fill="${K.lo}" opacity=".55"/>
+  <rect x="157" y="560" width="4" height="960" rx="2" fill="var(--sh)"/>
+  <rect x="169" y="560" width="4" height="960" rx="2" fill="var(--lip)"/>
+  <path d="M141 552 H189" stroke="${K.hi}" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <path d="M141 1528 H189" stroke="${K.hi}" stroke-width="7" stroke-linecap="round" fill="none"/>
+  ${nodes}
+</g>
+<g>${lineage}<path d="M180 1600 V1960" stroke="var(--eng)" stroke-width="2"/></g>
+
+<!-- NAME BANNER -->
+<g>
+  <path d="M300 214 H1200" stroke="var(--eng)" stroke-width="3" fill="none"/>
+  <path d="M300 218 H1200" stroke="var(--lip)" stroke-width="2" fill="none"/>
+  <rect x="300" y="78" width="8" height="86" rx="4" fill="${acc}"/>
+  <text x="330" y="142" font-family="var(--font-d)" font-weight="700" font-size="66" letter-spacing="2" fill="var(--ink)">${c.name}</text>
+  <text x="332" y="192" font-family="var(--font-b)" font-size="30" letter-spacing="5" fill="var(--ink2)">${c.sense.n.toUpperCase()}${dual?' / '+c.sec.n.toUpperCase():''} · ${K.n.toUpperCase()}</text>
+</g>
+
+<!-- COMPOSURE CAPSULE -->
+<g>
+  <rect x="1240" y="48" width="195" height="140" rx="66" fill="url(#gbr-${u})"/>
+  <path d="M1240 114 A66 66 0 0 1 1306 48 H1370" fill="none" stroke="var(--lip)" stroke-width="4"/>
+  <path d="M1435 122 A66 66 0 0 1 1369 188 H1305" fill="none" stroke="var(--sh)" stroke-width="4"/>
+  <rect x="1250" y="58" width="175" height="120" rx="58" fill="none" stroke="${acc}" stroke-width="2" opacity=".55"/>
+  <text x="1337" y="136" text-anchor="middle" font-family="var(--font-d)" font-weight="700" font-size="76" fill="#F6F3ED">${K.comp}</text>
+  <text x="1337" y="168" text-anchor="middle" font-family="var(--font-b)" font-size="20" letter-spacing="4" fill="#F6F3ED" opacity=".8">COMPOSURE</text>
+</g>
+
+<!-- ART WINDOW: recessed well, 8 bevel facets = the foil-normal steering geometry -->
+<g>
+  <polygon points="${ART_OUT}" fill="var(--sh)" opacity=".35" transform="translate(4,6)"/>
+  ${facets}
+  <polygon points="${ART_OUT}" fill="none" stroke="${K.lo}" stroke-width="3"/>
+  <polygon points="${ART_IN}" fill="none" stroke="${acc}" stroke-width="2.5" opacity=".8"/>
+  <g clip-path="url(#ca-${u})">
+    <rect x="318" y="253" width="1104" height="889" fill="#D6D1C6"/>
+    <rect x="318" y="253" width="1104" height="889" fill="${acc}" opacity=".10"/>
+    <g fill="none" stroke="var(--eng)" stroke-width="2" opacity=".5">${[120,220,320,420].map(r=>`<circle cx="870" cy="700" r="${r}"/>`).join('')}</g>
+    <text x="870" y="712" text-anchor="middle" font-family="var(--font-b)" font-size="34" letter-spacing="4" fill="var(--ink2)" opacity=".55">${c.name.toUpperCase()} — ART PENDING</text>
+    <rect x="318" y="253" width="1104" height="26" fill="var(--sh)" opacity=".4"/>
+    <rect x="318" y="253" width="22" height="889" fill="var(--sh)" opacity=".4"/>
+  </g>
+</g>
+
+<!-- GLASS PLATES: art bleeds behind text, full-art feel even on Commons -->
+<g>
+  <rect x="300" y="1175" width="1140" height="145" rx="26" fill="#F4F1EA" opacity=".72"/>
+  <rect x="300" y="1175" width="1140" height="145" rx="26" fill="url(#gg-${u})"/>
+  <rect x="300" y="1175" width="1140" height="145" rx="26" fill="url(#guil-${u})" opacity=".35"/>
+  <rect x="300" y="1175" width="1140" height="145" rx="26" fill="none" stroke="${K.lo}" stroke-width="2" opacity=".55"/>
+  <path d="M300 1201 A26 26 0 0 1 326 1175 H336 V1320 H326 A26 26 0 0 1 300 1294 Z" fill="${acc}"/>
+  <circle cx="392" cy="1247" r="34" fill="none" stroke="${acc}" stroke-width="3" opacity=".8"/>
+  <text x="450" y="1236" font-family="var(--font-d)" font-weight="700" font-size="38" fill="var(--ink)">ATTUNEMENT</text>
+  <text x="450" y="1282" font-family="var(--font-b)" font-size="27" fill="var(--ink2)">Gentle passive — eases Overwhelm each turn.</text>
+</g>
+${[[1335,"SOFT RESONANCE","Fills Composure. Never harms.",20,1],[1525,"ROLLING HUM","Second expression — unlocks with the second sense.",60,2]].map((p,i)=>`
+<g${i===1&&c.cls<2?' opacity=".34"':''}>
+  <rect x="300" y="${p[0]}" width="1140" height="175" rx="26" fill="#F4F1EA" opacity=".62"/>
+  <rect x="300" y="${p[0]}" width="1140" height="175" rx="26" fill="url(#gg-${u})"/>
+  <rect x="300" y="${p[0]}" width="1140" height="175" rx="26" fill="none" stroke="${K.lo}" stroke-width="2" opacity=".5"/>
+  <path d="M326 ${p[0]+2} H1414" stroke="var(--lip)" stroke-width="3" fill="none"/>
+  ${[0,1,2].map(n=>n<p[4]?`<circle cx="${350+n*48}" cy="${p[0]+87}" r="20" fill="${acc}"/>`:`<circle cx="${350+n*48}" cy="${p[0]+87}" r="20" fill="none" stroke="var(--ink2)" stroke-width="3" opacity=".45"/>`).join('')}
+  <text x="500" y="${p[0]+77}" font-family="var(--font-d)" font-weight="700" font-size="38" fill="var(--ink)">${p[1]}</text>
+  <text x="500" y="${p[0]+123}" font-family="var(--font-b)" font-size="27" fill="var(--ink2)">${p[2]}</text>
+  <text x="1408" y="${p[0]+105}" text-anchor="end" font-family="var(--font-d)" font-weight="700" font-size="52" fill="var(--ink)">${p[3]}</text>
+</g>`).join('')}
+
+<!-- FOOTER + METADATA -->
+<g>
+  <path d="M300 1715 H1440" stroke="var(--eng)" stroke-width="3" fill="none"/>
+  <path d="M300 1719 H1440" stroke="var(--lip)" stroke-width="2" fill="none"/>
+  <g stroke="var(--eng)" stroke-width="2"><path d="M680 1735 V1815"/><path d="M1060 1735 V1815"/></g>
+  <text x="320" y="1755" font-family="var(--font-b)" font-size="18" letter-spacing="3" fill="var(--ink2)">WEAKNESS</text>
+  <g transform="translate(320,1768) scale(0.52)" color="${SENSE_HEX[rel.weak]}">${CREST[rel.weak]}</g>
+  <text x="396" y="1812" font-family="var(--font-d)" font-weight="700" font-size="42" fill="var(--ink)">×1.5</text>
+  <text x="700" y="1755" font-family="var(--font-b)" font-size="18" letter-spacing="3" fill="var(--ink2)">RESISTANCE</text>
+  <g transform="translate(700,1768) scale(0.52)" color="${SENSE_HEX[rel.strong]}">${CREST[rel.strong]}</g>
+  <text x="776" y="1812" font-family="var(--font-d)" font-weight="700" font-size="42" fill="var(--ink)">−20</text>
+  <text x="1080" y="1755" font-family="var(--font-b)" font-size="18" letter-spacing="3" fill="var(--ink2)">SETTLE</text>
+  <g transform="translate(1080,1768)"><circle cx="26" cy="26" r="22" fill="none" stroke="${acc}" stroke-width="4"/><circle cx="26" cy="26" r="9" fill="${acc}"/></g>
+  <text x="1156" y="1812" font-family="var(--font-d)" font-weight="700" font-size="42" fill="var(--ink)">2</text>
+</g>
+<g>
+  <rect x="300" y="1850" width="1140" height="125" rx="20" fill="${K.lo}" opacity=".14"/>
+  <rect x="300" y="1850" width="1140" height="125" rx="20" fill="url(#guil-${u})" opacity=".45"/>
+  <text x="326" y="1898" font-family="var(--font-m)" font-size="22" letter-spacing="2" fill="var(--ink2)">PERCEIVES · SET 01 · THE AWAKENING</text>
+  <text x="326" y="1938" font-family="var(--font-m)" font-size="22" letter-spacing="2" fill="var(--ink2)" opacity=".8">${c.hash}</text>
+  <text x="1414" y="1898" text-anchor="end" font-family="var(--font-m)" font-size="22" letter-spacing="2" fill="var(--ink2)">${c.cls===4?'★ 1 / 1':(c.id+1<10?'00':'0')+(c.id+1)+' / 108'}</text>
+  ${serial}
+</g>
+
+<!-- TYPE INLAY: heaviest line on the card, and the only line that is a colour -->
+<rect x="294" y="54" width="1152" height="1927" rx="42" fill="none" stroke="url(#ga-${u})" stroke-width="6"/>
+<rect x="294" y="51" width="1152" height="1927" rx="42" fill="none" stroke="var(--lip)" stroke-width="1.5" opacity=".7"/>
+<g clip-path="url(#ct-${u})" style="mix-blend-mode:screen" opacity=".14"><rect width="1500" height="2100" fill="url(#ga-${u})"/></g>
+${striations}
+</svg>`;
+}
+function backSVG(id){
+  return `<svg viewBox="0 0 300 420" xmlns="http://www.w3.org/2000/svg"><defs>
+   <radialGradient id="bg${id}" cx="50%" cy="42%" r="72%"><stop offset="0" stop-color="#2A2440"/><stop offset="1" stop-color="#131120"/></radialGradient>
+   <linearGradient id="bs${id}" x1="0" y1="0" x2="1" y2="1" gradientUnits="userSpaceOnUse"><stop offset=".4" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#b9c6ff" stop-opacity=".2"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/></linearGradient>
+   <clipPath id="bc${id}"><rect x="8" y="8" width="284" height="404" rx="16"/></clipPath></defs>
+   <g clip-path="url(#bc${id})"><rect x="8" y="8" width="284" height="404" fill="url(#bg${id})"/>
+    <g stroke="#8FA5D2" fill="none" opacity=".5"><circle cx="150" cy="176" r="34" stroke-width="3"/><circle cx="150" cy="176" r="60" stroke-width="2.4"/><circle cx="150" cy="176" r="88" stroke-width="1.8"/><circle cx="150" cy="176" r="118" stroke-width="1.3"/></g>
+    <ellipse cx="150" cy="176" rx="46" ry="30" fill="#EAE8F2"/><circle cx="150" cy="176" r="18" fill="#8FA5D2"/><circle cx="150" cy="176" r="8" fill="#131120"/><ellipse cx="150" cy="176" rx="46" ry="30" fill="none" stroke="#3a3550" stroke-width="2.5"/>
+    <text x="150" y="332" text-anchor="middle" font-family="var(--font-d)" font-weight="700" font-size="28" letter-spacing="7" fill="#C9CEE6">PERCEIVES</text>
+    <text x="150" y="354" text-anchor="middle" font-family="var(--font-m)" font-size="10" letter-spacing="5" fill="#726f92">SENSE &amp; SEEK</text>
+    <rect x="11" y="11" width="278" height="398" rx="14" fill="none" stroke="#3a3550" stroke-width="4"/>
+    <rect x="8" y="8" width="284" height="404" fill="url(#bs${id})" style="mix-blend-mode:screen"/></g></svg>`;
+}
+
+/* ---------- pack wrapper ---------- */
+function packFront(){
+  return `<svg viewBox="0 0 300 500" xmlns="http://www.w3.org/2000/svg"><defs>
+   <linearGradient id="pw" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b2b6e"/><stop offset=".4" stop-color="#2f7fa6"/><stop offset=".7" stop-color="#4a3f8f"/><stop offset="1" stop-color="#c9a24a"/></linearGradient>
+   <radialGradient id="sw" cx="50%" cy="56%" r="55%"><stop offset="0" stop-color="#dfe8ff" stop-opacity=".9"/><stop offset=".5" stop-color="#8fb6d8" stop-opacity=".25"/><stop offset="1" stop-color="#2b2b6e" stop-opacity="0"/></radialGradient>
+   <linearGradient id="fol" x1="0" y1="0" x2="1" y2="1" gradientUnits="userSpaceOnUse"><stop offset=".35" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".35"/><stop offset=".65" stop-color="#fff" stop-opacity="0"/></linearGradient>
+   <clipPath id="pc"><rect x="6" y="6" width="288" height="488" rx="12"/></clipPath></defs>
+   <g clip-path="url(#pc)">
+    <rect x="6" y="6" width="288" height="488" fill="url(#pw)"/>
+    <g opacity=".5"><path d="M-40 300 Q150 160 340 300 Q150 440 -40 300 Z" fill="url(#sw)"/></g>
+    <circle cx="150" cy="278" r="96" fill="url(#sw)" opacity=".6"/>
+    <!-- crimp -->
+    <rect x="6" y="6" width="288" height="20" fill="#e9e2c0" opacity=".8"/><rect x="6" y="474" width="288" height="20" fill="#e9e2c0" opacity=".8"/>
+    <line x1="6" y1="16" x2="294" y2="16" stroke="#b8ad7a" stroke-dasharray="4 4"/>
+    <!-- top brand -->
+    <rect x="86" y="34" width="128" height="26" rx="6" fill="#f4f1e6"/><text x="150" y="52" text-anchor="middle" font-family="var(--font-d)" font-weight="700" font-size="14" letter-spacing="1" fill="#2b2b6e">PRESSTINE ✦</text>
+    <text x="150" y="78" text-anchor="middle" font-family="var(--font-m)" font-size="8" letter-spacing="3" fill="#e8ecff">TRADING CARD PACKS · EST 2026</text>
+    <!-- title -->
+    <text x="150" y="118" text-anchor="middle" font-family="var(--font-d)" font-weight="700" font-size="40" letter-spacing="1" fill="#fff" style="paint-order:stroke;stroke:#2b2b6e;stroke-width:3">PERCEIVES</text>
+    <text x="150" y="150" text-anchor="middle" font-family="var(--font-d)" font-weight="700" font-size="26" letter-spacing="6" fill="#F4D98B">★ PRIME ★</text>
+    <text x="150" y="172" text-anchor="middle" font-family="var(--font-b)" font-size="12" letter-spacing="4" fill="#e8ecff">SENSE · SEEK</text>
+    <!-- count badge -->
+    <rect x="26" y="196" width="96" height="40" rx="8" fill="#F4D98B"/><text x="44" y="224" font-family="var(--font-d)" font-weight="800" font-size="26" fill="#2b2b6e">10</text><text x="74" y="215" font-family="var(--font-d)" font-weight="700" font-size="12" fill="#2b2b6e">CARDS</text><text x="74" y="228" font-family="var(--font-b)" font-size="9" fill="#2b2b6e">CARTES</text>
+    <rect x="150" y="196" width="124" height="40" rx="8" fill="#ffffff22" stroke="#ffffff55"/><text x="212" y="214" text-anchor="middle" font-family="var(--font-b)" font-size="9" fill="#eef2ff">INCLUDES 2 PRIME CARDS</text><text x="212" y="228" text-anchor="middle" font-family="var(--font-b)" font-size="8" fill="#cfd6f0">2 CARTES PRIME INCLUSES</text>
+    <!-- emblem: eye in swirl -->
+    <g transform="translate(150,300)"><circle r="70" fill="#0f1030" opacity=".5"/>
+     <g stroke="#cfe0ff" fill="none" opacity=".6"><circle r="30"/><circle r="48"/><circle r="66"/></g>
+     <ellipse rx="46" ry="30" fill="#EAE8F2"/><circle r="18" fill="#6E86B7"/><circle r="8" fill="#0f1030"/><ellipse rx="46" ry="30" fill="none" stroke="#2b2b6e" stroke-width="3"/></g>
+    <!-- mirrored bottom logo -->
+    <text x="150" y="430" text-anchor="middle" font-family="var(--font-d)" font-weight="700" font-size="34" letter-spacing="1" fill="#ffffff55" transform="rotate(180 150 420)">PERCEIVES</text>
+    <rect x="6" y="6" width="288" height="488" fill="url(#fol)" style="mix-blend-mode:screen"/>
+    <rect x="6" y="6" width="288" height="488" rx="12" fill="none" stroke="#1c1c48" stroke-width="3"/></g></svg>`;
+}
+function packBack(){
+  return `<svg viewBox="0 0 300 500" xmlns="http://www.w3.org/2000/svg"><defs>
+   <linearGradient id="pb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c1c48"/><stop offset="1" stop-color="#141232"/></linearGradient>
+   <clipPath id="pcb"><rect x="6" y="6" width="288" height="488" rx="12"/></clipPath></defs>
+   <g clip-path="url(#pcb)"><rect x="6" y="6" width="288" height="488" fill="url(#pb)"/>
+    <rect x="6" y="6" width="288" height="20" fill="#e9e2c0" opacity=".8"/><rect x="6" y="474" width="288" height="20" fill="#e9e2c0" opacity=".8"/>
+    <g stroke="#8FA5D2" fill="none" opacity=".4"><circle cx="150" cy="150" r="30"/><circle cx="150" cy="150" r="52"/><circle cx="150" cy="150" r="74"/></g>
+    <ellipse cx="150" cy="150" rx="40" ry="26" fill="#EAE8F2"/><circle cx="150" cy="150" r="15" fill="#8FA5D2"/><circle cx="150" cy="150" r="7" fill="#141232"/>
+    <text x="150" y="250" text-anchor="middle" font-family="var(--font-d)" font-weight="700" font-size="22" letter-spacing="5" fill="#C9CEE6">PERCEIVES</text>
+    <text x="40" y="300" font-family="var(--font-b)" font-size="9" fill="#8b8fb0">Collect all 8 senses. Evolve · Merge · Breed · Duel.</text>
+    <text x="40" y="318" font-family="var(--font-b)" font-size="9" fill="#8b8fb0">Every card a one-of-a-kind Perceivee.</text>
+    <rect x="40" y="360" width="150" height="34" fill="#fff"/><g fill="#141232">${[0,6,10,18,24,30,34,42,48,54,62,70,76,84,92,100,108,118,126,132].map(x=>`<rect x="${44+x}" y="364" width="${(x%7)?2:4}" height="26"/>`).join('')}</g>
+    <text x="210" y="384" font-family="var(--font-m)" font-size="9" fill="#8b8fb0">SET 001</text>
+    <rect x="6" y="6" width="288" height="488" rx="12" fill="none" stroke="#0e0e2c" stroke-width="3"/></g></svg>`;
+}
+
+/* ---------- state ---------- */
+let deck=[],dealt=0,packRot={x:0,y:0},dragging=false,last=null,moved=false,orient={back:false,inv:false},topRot={x:0,y:0};
+const pack=$('pack'),opener=$('opener');
+$('pfront').innerHTML=packFront(); $('pback').innerHTML=packBack();
+function applyPack(){pack.style.transform=`rotateX(${packRot.x}deg) rotateY(${packRot.y}deg)`;}
+applyPack();
+
+// Genome seed is rolled once per card and never rerolls (sprite-genome-logic-v1 §1).
+// Here it drives the striation angle + phase, so two same-class cards shimmer differently.
+// genome_hash is the per-card differentiator: "Booma #0472 · a3f9c1".
+function makeDeck(){deck=[];for(let i=0;i<10;i++){
+  const cls=rollClass(),s=rnd(SENSES);let sec=rnd(SENSES);while(sec===s)sec=rnd(SENSES);
+  const seed=(Math.random()*4294967296)>>>0;
+  const hash='GEN 000 · '+seed.toString(16).padStart(8,'0').slice(0,6).toUpperCase();
+  deck.push({id:i,cls,sense:s,sec,name:s.name,seed,hash,faceUp:false,inv:false,flipped:false});}}
+function buildTray(){const t=$('tray');t.innerHTML='';for(let i=0;i<10;i++){const s=document.createElement('div');s.className='slot';s.id='slot'+i;s.innerHTML=`<span class="num">${i+1}</span>`;t.append(s);}}
+buildTray();
+
+function norm(a){a=((a%360)+360)%360;return a;}
+function readOrientation(){orient.back=norm(packRot.y)>90&&norm(packRot.y)<270; orient.inv=norm(packRot.x)>90&&norm(packRot.x)<270;}
+
+function setControls(){
+  const c=$('controls');c.innerHTML='';
+  if(dealt===0 && deck.length===0){ c.append(btn('✦ Rip open','primary',rip)); c.append(btn("Rip 'em all ⚡",'ghost',ripAll)); }
+  else if(dealt<10){ c.append(btn("Rip 'em all ⚡",'ghost',ripAll)); }
+}
+function btn(t,cls,fn){const b=document.createElement('button');b.className='ctl '+(cls||'');b.textContent=t;b.onclick=fn;return b;}
+setControls();
+
+/* ---- rip the pack ---- */
+function rip(){
+  readOrientation(); makeDeck(); dealt=0; buildTray();
+  $('status').textContent = orient.back? 'Ripped — Perceivee side is up. Slide each card into the tray.' : 'Ripped — topside up. Slide a card down, then tap it to flip.';
+  $('hint').textContent='Slide the top card any direction into the tray below.';
+  ripAnimate(()=>{ addDepth(); nextTop(); setControls(); });
+}
+function addDepth(){
+  if($('depthA'))return;
+  const a=document.createElement('div');a.className='depth';a.id='depthA';a.style.transform='translate(9px,12px) scale(.97)';
+  const b=document.createElement('div');b.className='depth';b.id='depthB';b.style.transform='translate(4px,6px) scale(.985)';
+  opener.append(a,b);
+}
+function clearDepth(){['depthA','depthB'].forEach(id=>{const e=$(id);if(e)e.remove();});}
+
+/* ---- top card in opener ---- */
+function nextTop(){
+  const old=$('top'); if(old)old.remove();
+  if(dealt>=10){ clearDepth(); finish(); return; }
+  const c=deck[dealt];
+  c.faceUp=orient.back; c.inv=orient.inv;
+  const el=document.createElement('div'); el.className='topcard'+(c.inv?' inv':''); el.id='top';
+  el.innerHTML=`<div class="face fr"><div class="${c.inv?'':''}">${wrapUp(frontSVG(c),c.inv)}</div></div><div class="face bk">${wrapUp(backSVG(c.id),c.inv)}</div>`;
+  opener.append(el);
+  topRot={x:c.inv?180:0,y:c.faceUp?0:180};
+  el.style.transform=`rotateX(${topRot.x}deg) rotateY(${topRot.y}deg)`;
+  attachTopDrag(el,c);
+  if(dealt===9){const d=$('depthA');if(d)d.style.display='none';}
+  if(dealt===8){const d=$('depthB');if(d)d.style.display='none';}
+}
+// Orientation: hold the pack upside-down and the dealt card comes out upside-down.
+// Anchored to ^ so this can only ever tag the ROOT svg, never nested art.
+function wrapUp(svg,inv){ return inv? svg.replace(/^<svg /,'<svg class="up" ') : svg; }
+
+function attachTopDrag(el,c){
+  let sx,sy,dx=0,dy=0,drag=false,mv=false;
+  const down=e=>{drag=true;mv=false;sx=e.clientX;sy=e.clientY;el.classList.add('dragging');el.classList.remove('snap');el.setPointerCapture&&el.setPointerCapture(e.pointerId);};
+  const move=e=>{if(!drag)return;dx=e.clientX-sx;dy=e.clientY-sy;if(Math.abs(dx)+Math.abs(dy)>4)mv=true;
+    el.style.transform=`translate(${dx}px,${dy}px) rotateX(${topRot.x}deg) rotateY(${topRot.y}deg) rotate(${dx*0.04}deg)`;};
+  const up=e=>{if(!drag)return;drag=false;el.classList.remove('dragging');
+    if(Math.hypot(dx,dy)>60){ commit(el,c,dx,dy); }
+    else { el.classList.add('snap'); el.style.transform=`rotateX(${topRot.x}deg) rotateY(${topRot.y}deg)`; dx=dy=0; }
+  };
+  el.addEventListener('pointerdown',down);window.addEventListener('pointermove',move);window.addEventListener('pointerup',up);
+  el.addEventListener('click',()=>{ if(mv)return; // tap flips the top card in place
+    topRot.y=(topRot.y===0?180:0); c.faceUp=(topRot.y===0);
+    el.classList.add('snap'); el.style.transform=`rotateX(${topRot.x}deg) rotateY(${topRot.y}deg)`; });
+}
+function commit(el,c,dx,dy){
+  el.classList.add('snap');
+  const ang=Math.atan2(dy,dx);
+  el.style.transform=`translate(${Math.cos(ang)*700}px,${Math.sin(ang)*700}px) rotate(${dx*0.1}deg)`;
+  el.style.opacity='0';
+  placeInSlot(c);
+  dealt++;
+  setTimeout(()=>{ nextTop(); },300);
+}
+
+/* ---- tray slots ---- */
+function placeInSlot(c){
+  const s=$('slot'+c.id? 'slot'+dealt : 'slot'+dealt); // fill in deal order
+  const slot=$('slot'+dealt);
+  slot.classList.add('filled','pop'); slot.innerHTML='';
+  const card=document.createElement('div');card.className='card'+(c.faceUp?'':' flipped');
+  card.innerHTML=`<div class="face fr">${wrapUp(frontSVG(c),c.inv)}</div><div class="face bk">${wrapUp(backSVG(c.id),c.inv)}</div>`;
+  slot.append(card);
+  c._slotEl=card; c._flipShown=c.faceUp;
+  slot.onclick=()=>{ c._flipShown=!c._flipShown; card.classList.toggle('flipped',!c._flipShown); };
+  if(fxOn && c.cls>=2) burst(slot, heroColor(c));
+}
+
+/* ---- rip 'em all ---- */
+function ripAll(){
+  const old=$('top'); if(old)old.remove(); clearDepth();
+  if(deck.length===0){ readOrientation(); makeDeck(); buildTray(); }
+  const cascade=()=>{
+    $('status').textContent='Rip ’em all — revealing your pull…';
+    let i=dealt;
+    const step=()=>{
+      if(i>=10){ dealt=10; setControls(); finish(); return; }
+      const c=deck[i]; c.faceUp=true; c.inv=orient.inv;
+      const slot=$('slot'+i); slot.classList.add('filled','pop'); slot.innerHTML='';
+      const card=document.createElement('div');card.className='card';
+      card.innerHTML=`<div class="face fr">${wrapUp(frontSVG(c),c.inv)}</div><div class="face bk">${wrapUp(backSVG(c.id),c.inv)}</div>`;
+      slot.append(card); c._flipShown=true;
+      slot.onclick=()=>{ c._flipShown=!c._flipShown; card.classList.toggle('flipped',!c._flipShown); };
+      if(fxOn && c.cls>=2) burst(slot,heroColor(c));
+      i++; setTimeout(step,90);
+    };
+    step();
+  };
+  if(!pack.classList.contains('hidden')){ ripAnimate(cascade); }
+  else cascade();
+}
+
+/* ---- finish / hero ---- */
+function finish(){
+  const best=deck.reduce((a,c)=>c.cls>a.cls?c:a,deck[0]);
+  $('status').textContent='Pull complete'; $('hint').textContent='Tap any card in the tray to flip it.';
+  $('controls').innerHTML='';
+  const col=heroColor(best);
+  $('heroCard').innerHTML=frontSVG(best); $('heroCard').style.setProperty('--halo',col);
+  $('heroLabel').textContent=`${best.name} · ${best.sense.n}${best.cls>=2?' / '+best.sec.n:''}`;
+  $('heroTier').textContent=`${CLASSES[best.cls].n} · ${CLASSES[best.cls].t}${best.cls===4?' · 1 / 1':''} — your rarest`;
+  $('hero').classList.add('show');
+  if(fxOn) setTimeout(()=>bigBurst(col),200);
+}
+$('again').addEventListener('click',()=>{
+  $('hero').classList.remove('show'); deck=[];dealt=0;buildTray();clearDepth();
+  const old=$('top');if(old)old.remove();
+  pack.classList.remove('ripping','hidden'); packRot={x:0,y:0};applyPack();
+  $('status').textContent='Spin the pack — however it’s oriented is how the cards come out';
+  $('hint').textContent='Drag to rotate the sealed pack in 3D.'; setControls();
+});
+
+/* ---- sealed pack drag ---- */
+pack.addEventListener('pointerdown',e=>{dragging=true;moved=false;last={x:e.clientX,y:e.clientY};pack.classList.add('dragging');pack.setPointerCapture&&pack.setPointerCapture(e.pointerId);});
+window.addEventListener('pointermove',e=>{if(!dragging)return;const dx=e.clientX-last.x,dy=e.clientY-last.y;last={x:e.clientX,y:e.clientY};if(Math.abs(dx)+Math.abs(dy)>3)moved=true;packRot.y+=dx*0.6;packRot.x=Math.max(-180,Math.min(180,packRot.x-dy*0.6));applyPack();
+  readOrientation(); $('status').textContent=`Orientation → ${orient.back?'BACK':'FRONT'} up${orient.inv?' · upside-down':''}`;});
+window.addEventListener('pointerup',()=>{dragging=false;pack.classList.remove('dragging');});
+
+/* ---- rip animations ---- */
+let ripStyle='scatter';
+$('ripsel').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ripStyle=b.dataset.s;[...$('ripsel').children].forEach(x=>x.setAttribute('aria-pressed', String(x===b)));});
+function ripAnimate(cb){
+  const rect=pack.getBoundingClientRect();
+  const faceSVG = orient.back? packBack() : packFront();
+  const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const layer=document.createElement('div');layer.className='ripfx';document.body.append(layer);
+  pack.classList.add('hidden');
+  const mk=()=>{const p=document.createElement('div');p.className='piece';
+    p.style.left=rect.left+'px';p.style.top=rect.top+'px';p.style.width=rect.width+'px';p.style.height=rect.height+'px';
+    p.innerHTML=faceSVG;layer.append(p);return p;};
+  let maxT=900;
+  if(ripStyle==='lotus'){
+    maxT=1900; const N=8;
+    for(let i=0;i<N;i++){
+      const a0=i*45-90, a1=(i+1)*45-90, am=(a0+a1)/2;
+      const pt=(ang,r)=>[50+Math.cos(ang*Math.PI/180)*r, 50+Math.sin(ang*Math.PI/180)*r];
+      const p0=pt(a0,120), pm=pt(am,150), p1=pt(a1,120);
+      const p=mk();
+      p.style.clipPath=`polygon(50% 50%, ${p0[0]}% ${p0[1]}%, ${pm[0]}% ${pm[1]}%, ${p1[0]}% ${p1[1]}%)`;
+      p.style.transformOrigin='50% 50%';
+      if(reduce){p.style.opacity='0';continue;}
+      const ox=Math.cos(am*Math.PI/180)*46, oy=Math.sin(am*Math.PI/180)*46;
+      const sway=(Math.random()*220-110), spin=(Math.random()*180-90);
+      p.animate([
+        {transform:'translate(0,0) rotate(0deg)',opacity:1,offset:0},
+        {transform:`translate(${ox}px,${oy}px) rotate(${am*0.12}deg)`,opacity:1,offset:.24},
+        {transform:`translate(${ox+sway}px,${window.innerHeight+280}px) rotate(${spin}deg)`,opacity:.08,offset:1}
+      ],{duration:1550+Math.random()*350,easing:'cubic-bezier(.28,.5,.35,1)'});
+    }
+  } else {
+    maxT=1050;
+    for(let r=0;r<3;r++)for(let c=0;c<3;c++){
+      const p=mk();
+      p.style.clipPath=`inset(${(r*33.34).toFixed(2)}% ${((2-c)*33.34).toFixed(2)}% ${((2-r)*33.34).toFixed(2)}% ${(c*33.34).toFixed(2)}%)`;
+      p.style.transformOrigin='center';
+      if(reduce){p.style.opacity='0';continue;}
+      const dx=(c-1)*(200+Math.random()*240)+(Math.random()*80-40);
+      const dy=(r-1)*(200+Math.random()*240)-Math.random()*120;
+      const rot=Math.random()*720-360;
+      p.animate([
+        {transform:'translate(0,0) rotate(0) scale(1)',opacity:1},
+        {transform:`translate(${dx}px,${dy}px) rotate(${rot}deg) scale(.28)`,opacity:0}
+      ],{duration:720+Math.random()*300,easing:'cubic-bezier(.2,.6,.3,1)'});
+    }
+  }
+  setTimeout(()=>{ layer.remove(); cb&&cb(); }, reduce?60:maxT);
+}
+
+/* ---- effects ---- */
+let fxOn=true; $('fx').addEventListener('change',e=>fxOn=e.target.checked);
+function burst(anchor,color){
+  if(!fxOn||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  const r=anchor.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  for(let i=0;i<14;i++){const s=document.createElement('div');s.className='spark';s.style.background=color;s.style.left=cx+'px';s.style.top=cy+'px';
+    $('fxlayer').append(s);const a=Math.random()*6.28,d=30+Math.random()*60;
+    s.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px) scale(0)`,opacity:0}],{duration:600+Math.random()*300,easing:'cubic-bezier(.2,.7,.2,1)'}).onfinish=()=>s.remove();}
+}
+function bigBurst(color){
+  if(!fxOn||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  const cx=innerWidth/2,cy=innerHeight/2;
+  for(let i=0;i<50;i++){const s=document.createElement('div');s.className='spark';s.style.background=i%3?color:'#F4D98B';s.style.left=cx+'px';s.style.top=cy+'px';
+    $('fxlayer').append(s);const a=Math.random()*6.28,d=80+Math.random()*220;
+    s.animate([{transform:'translate(0,0) scale(1.2)',opacity:1},{transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d+40}px) scale(0)`,opacity:0}],{duration:900+Math.random()*600,easing:'cubic-bezier(.15,.7,.2,1)'}).onfinish=()=>s.remove();}
+}
+</script>

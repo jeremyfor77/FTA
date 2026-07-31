@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PERCEIVEES — Concept Art</title>
+<meta name="description" content="PERCEIVEES: a collectible card system and top-down world built on eight senses. Concept art and the pack opener.">
+<style>
+/* PERCEIVEES lives in its own visual world — black ground, muted sense accents.
+   Deliberately NOT the FTA newsprint palette: this is a separate property, and
+   the front-page box is the seam between the two. */
+:root{
+  --void:#0E0D10; --raise:#17151B; --line:#2E2A36;
+  --ink:#EDEAF0; --dim:#9A94A6; --faint:#6E6A78;
+  --sight:#C9CEDA; --sound:#6E86B7; --scent:#8FA98A; --taste:#C6A462;
+  --touch:#C08265; --balance:#6FA3A0; --body:#8C8371; --inner:#9B7FA8;
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--void);color:var(--ink);font-family:var(--sans);
+  line-height:1.65;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:1080px;margin:0 auto;padding:0 clamp(1.1rem,4vw,2rem);}
+a{color:inherit}
+
+/* back to FTA — the seam, stated plainly */
+.back{border-bottom:1px solid var(--line);}
+.back a{display:inline-block;padding:.9rem 0;font-family:var(--mono);font-size:.7rem;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--faint);text-decoration:none;}
+.back a:hover{color:var(--ink)}
+
+header{padding:clamp(3rem,9vw,6rem) 0 clamp(2rem,6vw,4rem);text-align:center;}
+.markwrap{width:min(300px,58vw);margin:0 auto clamp(1.6rem,4vw,2.4rem);}
+.markwrap img{width:100%;display:block}
+h1{font-family:var(--sans);font-weight:800;letter-spacing:.06em;
+  font-size:clamp(1.9rem,6vw,3.1rem);margin:0 0 .5rem;}
+/* 10 letters, 8 senses: the last two wrap back to the first two, so the wordmark
+   closes on itself exactly as the ring does. */
+h1 i{font-style:normal}
+h1 i:nth-child(1){color:var(--scent)} h1 i:nth-child(2){color:var(--sight)}
+h1 i:nth-child(3){color:var(--sound)} h1 i:nth-child(4){color:var(--balance)}
+h1 i:nth-child(5){color:var(--body)}  h1 i:nth-child(6){color:var(--touch)}
+h1 i:nth-child(7){color:var(--inner)} h1 i:nth-child(8){color:var(--taste)}
+h1 i:nth-child(9){color:var(--scent)} h1 i:nth-child(10){color:var(--sight)}
+.tag{font-family:var(--mono);font-size:clamp(.72rem,2vw,.85rem);letter-spacing:.22em;
+  text-transform:uppercase;color:var(--dim);margin:0}
+.series{font-family:var(--mono);font-size:.68rem;letter-spacing:.3em;color:var(--faint);
+  margin:.7rem 0 0}
+
+.cta{display:inline-block;margin-top:clamp(2rem,5vw,3rem);padding:.95rem 2.1rem;
+  border:2px solid var(--inner);border-radius:3px;text-decoration:none;color:var(--ink);
+  font-family:var(--mono);font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;
+  transition:background .18s ease,color .18s ease;}
+.cta:hover{background:var(--inner);color:var(--void)}
+
+section{padding:clamp(2.4rem,6vw,4rem) 0;border-top:1px solid var(--line);}
+h2{font-weight:700;font-size:clamp(1.15rem,3vw,1.5rem);margin:0 0 .6rem;letter-spacing:.01em}
+.lede{color:var(--dim);max-width:64ch;margin:0 0 1.8rem}
+p{max-width:64ch}
+
+.grid{display:grid;gap:clamp(1rem,3vw,1.8rem);}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:760px){.g2,.g3{grid-template-columns:1fr}}
+figure{margin:0}
+figure img{width:100%;display:block;border:1px solid var(--line);border-radius:3px;
+  background:var(--void)}
+figcaption{margin-top:.7rem;font-size:.88rem;color:var(--dim)}
+figcaption b{display:block;color:var(--ink);font-weight:600;font-size:.95rem}
+
+/* class ladder */
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);gap:.8rem;margin-top:1.6rem}
+@media(max-width:700px){.ladder{grid-template-columns:repeat(2,1fr)}}
+.rung{background:var(--raise);border:1px solid var(--line);border-radius:3px;
+  padding:.9rem .5rem 1rem;text-align:center}
+.rung img{width:100%;max-width:104px;margin:0 auto;display:block}
+.rung b{display:block;margin-top:.6rem;font-size:.85rem}
+.rung span{display:block;font-family:var(--mono);font-size:.62rem;color:var(--faint);
+  letter-spacing:.08em;margin-top:.2rem}
+
+/* the eight */
+.senses{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.4rem}
+.sense{flex:1 1 110px;border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.sense i{display:block;height:42px}
+.sense em{display:block;font-style:normal;font-family:var(--mono);font-size:.62rem;
+  color:var(--faint);padding:.4rem .5rem;letter-spacing:.05em}
+.sense em b{display:block;color:var(--ink);font-family:var(--sans);font-size:.76rem;
+  font-weight:600;margin-bottom:.1rem;letter-spacing:0}
+
+footer{border-top:1px solid var(--line);padding:2rem 0 3.5rem;
+  font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;color:var(--faint)}
+</style>
+</head>
+<body>
+
+<div class="back"><div class="wrap"><a href="../index.html">&larr; FTA</a></div></div>
+
+<div class="wrap">
+
+  <header>
+    <div class="markwrap"><img src="img/mark_ring.png" alt="The PERCEIVEES mark: eight sense-coloured beams in an octagonal ring that cannot exist in three dimensions"></div>
+    <h1><i>P</i><i>E</i><i>R</i><i>C</i><i>E</i><i>I</i><i>V</i><i>E</i><i>E</i><i>S</i></h1>
+    <p class="tag">Not everything can be seen</p>
+    <p class="series">Series #1 &middot; Concept</p>
+    <a class="cta" href="rip.html">Rip a pack &rarr;</a>
+  </header>
+
+  <section>
+    <h2>The mark is an impossible object</h2>
+    <p class="lede">Eight beams, one per sense, forming a ring that cannot exist in three
+      dimensions.</p>
+    <p>An impossible object works by exploiting how your visual system builds depth out of
+      ambiguous cues. It is, literally, a perception puzzle — so the mark argues the whole idea
+      through its own form, rather than by drawing an organ that perceives. Every beam is lit from
+      the same direction, which is what convinces the eye they are solid; then each one passes both
+      in front of and behind the loop, which is what makes the ring impossible. The paradox lives in
+      the drawing order, not the geometry.</p>
+  </section>
+
+  <section>
+    <h2>The eight senses</h2>
+    <p class="lede">Not five. Sight, sound, scent, taste and touch — plus balance, body, and the
+      inner sense of what is happening inside you. Three of the eight cannot be seen at all.</p>
+    <div class="senses">
+      <div class="sense"><i style="background:var(--sight)"></i><em><b>Sight</b>#C9CEDA</em></div>
+      <div class="sense"><i style="background:var(--sound)"></i><em><b>Sound</b>#6E86B7</em></div>
+      <div class="sense"><i style="background:var(--scent)"></i><em><b>Scent</b>#8FA98A</em></div>
+      <div class="sense"><i style="background:var(--taste)"></i><em><b>Taste</b>#C6A462</em></div>
+      <div class="sense"><i style="background:var(--touch)"></i><em><b>Touch</b>#C08265</em></div>
+      <div class="sense"><i style="background:var(--balance)"></i><em><b>Balance</b>#6FA3A0</em></div>
+      <div class="sense"><i style="background:var(--body)"></i><em><b>Body</b>#8C8371</em></div>
+      <div class="sense"><i style="background:var(--inner)"></i><em><b>Inner</b>#9B7FA8</em></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>The pack</h2>
+    <p class="lede">The black space inside the mark becomes a window. On the wrapper a creature sits
+      inside it; on the card back it stays empty — deliberately, and permanently.</p>
+    <div class="grid g3">
+      <figure>
+        <img src="img/pack_wrapper.png" alt="Pack wrapper front: Booma framed inside the ring">
+        <figcaption><b>Wrapper, front</b>Booma — the Sound sense — framed by the mark.</figcaption>
+      </figure>
+      <figure>
+        <img src="img/wrapper_back.png" alt="Pack wrapper back: the other seven senses as a group">
+        <figcaption><b>Wrapper, back</b>The other seven. <em>Every sense is a way through.</em></figcaption>
+      </figure>
+      <figure>
+        <img src="img/card_back.png" alt="Card back: the ring on black with an empty window">
+        <figcaption><b>Card back</b>Identical on every card — otherwise you could read a card
+          face-down.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Awakening</h2>
+    <p class="lede">A creature climbs five classes. The badge on its card is the mark itself,
+      building one beam at a time.</p>
+    <div class="ladder">
+      <div class="rung"><img src="img/badge_1_hatchling.png" alt=""><b>Hatchling</b><span>1 BEAM</span></div>
+      <div class="rung"><img src="img/badge_3_wandering.png" alt=""><b>Wandering</b><span>3 BEAMS</span></div>
+      <div class="rung"><img src="img/badge_5_awakened.png" alt=""><b>Awakened</b><span>5 BEAMS</span></div>
+      <div class="rung"><img src="img/badge_7_luminary.png" alt=""><b>Luminary</b><span>7 BEAMS</span></div>
+      <div class="rung"><img src="img/badge_8_mythic.png" alt=""><b>Mythic</b><span>CLOSED</span></div>
+    </div>
+    <p style="margin-top:1.6rem">Only a <em>closed</em> ring can be impossible. A partial ring is
+      just a chain of beams — so the paradox appears at the exact moment a creature perceives all
+      eight senses. The badge is the brand, and the brand is the reward.</p>
+  </section>
+
+  <section>
+    <h2>In the world</h2>
+    <p class="lede">The creatures are built in 3D and rendered live in a top-down world.</p>
+    <div class="grid g2">
+      <figure>
+        <img src="img/booma_hatchling_FRONT.png" alt="Booma, front facing">
+        <figcaption><b>Booma</b>The Sound sense, at Hatchling. The rings around her in-game are
+          her own.</figcaption>
+      </figure>
+      <figure>
+        <img src="img/booma_walk_atlas.png" alt="Booma walk cycle sprite atlas, four facings">
+        <figcaption><b>Walk cycle</b>Eight frames across four facings, baked from the 3D
+          model.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section style="text-align:center">
+    <h2>Open a pack</h2>
+    <p class="lede" style="margin:0 auto 1.6rem">Ten cards, each one rolled — foil striations build
+      as a creature climbs its classes.</p>
+    <a class="cta" href="rip.html">Rip a pack &rarr;</a>
+  </section>
+
+</div>
+
+<footer><div class="wrap">PERCEIVEES &middot; concept art, work in progress &middot;
+  <a href="../index.html" style="color:var(--faint)">fta.quest</a></div></footer>
+
+</body>
+</html>

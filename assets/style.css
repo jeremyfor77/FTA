@@ -565,3 +565,45 @@ footer a { color: var(--ink-faint); }
   cursor: pointer;
 }
 .theme-toggle:hover { border-color: var(--ink); color: var(--ink); }
+
+/* ============================================================
+   PERCEIVEES front-page box.
+   Written as a period ADVERTISEMENT rather than in the brand's own
+   colours: PERCEIVEES is pastel-on-black and this paper is ink-on-newsprint.
+   Dropping the brand palette in raw would clash. The mark sits in a
+   plate — like a cut printing block — and the brand's own world starts
+   on the other side of the click.
+   ============================================================ */
+.ad-box{
+  display:grid; grid-template-columns:220px 1fr; gap:22px; align-items:center;
+  text-decoration:none; color:var(--ink);
+  border:3px double var(--ink); background:var(--paper-raised);
+  padding:20px 24px; margin-top:14px;
+}
+.ad-box:hover{ background:var(--paper-deep); }
+@media (max-width:700px){ .ad-box{ grid-template-columns:1fr; gap:14px; } }
+
+/* the mark keeps its own colour, but sits on the black plate it was designed
+   for, so the pastels stay legible against newsprint */
+.ad-mark{ background:#0E0D10; border:1px solid var(--rule-strong); padding:16px; }
+.ad-mark img{ width:100%; display:block; }
+
+.ad-kicker{
+  font-family:var(--font-mono); font-size:10px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-faint); margin-bottom:6px;
+}
+.ad-name{
+  font-family:var(--font-head); font-weight:800; letter-spacing:.06em;
+  font-size:clamp(24px,4vw,34px); margin:0 0 4px; text-transform:uppercase;
+}
+.ad-line{
+  font-family:var(--font-body); font-style:italic; color:var(--ink-soft);
+  margin:0 0 10px; font-size:15px;
+}
+.ad-box p{ margin:0 0 12px; max-width:62ch; }
+.ad-cta{
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--accent); border-bottom:1px solid var(--accent);
+  padding-bottom:2px;
+}
+.ad-box:hover .ad-cta{ color:var(--ink); border-color:var(--ink); }
