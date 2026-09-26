@@ -8,6 +8,17 @@ ASSETS = os.path.join(SITE, "assets")
 # slug, name, genre, img (or None), players, platform, status, blurb paragraphs
 GAMES = [
     dict(
+        slug="wardogs", name="WARDOGS", genre="Tactical Warfare FPS",
+        img="wardogs.jpg", players="100-Player, 3 Teams", platform="PC (Steam)",
+        status="Flagship Rotation — Dedicated Server Live",
+        blurb=[
+            "The flagship. A hundred players, three teams, one Control Zone worth dying for — repeatedly, and usually stupidly. Everybody starts each life with $10,000 and a menu full of ways to spend it badly.",
+            "The noobs are easy to spot: sprinting into the open zone with no armor because the vest ate into gun money, buying a vehicle then immediately rolling it into the only ravine on the map, and unloading a full mag at a silhouette that turns out to be a teammate. It happens to everyone exactly once. It happens to some people every single round.",
+            "The hardcore crowd is a different disease entirely — loadout spreadsheets, memorized Control Zone rotations, and a genuine moral crisis every time they die with unspent cash still in the bank. Give it a few weeks and the FTA server will have both types in the same squad, yelling at each other over comms about who flipped the truck this time.",
+            "This is the server we're building the clan around for the foreseeable future. Join in, die badly, get better, repeat.",
+        ],
+    ),
+    dict(
         slug="7-days-to-die", name="7 Days to Die", genre="Survival Horror",
         img="7daystodie.jpg", players="1–6 Co-op", platform="PC (Steam)",
         status="Dedicated Server Live",
@@ -169,15 +180,6 @@ GAMES = [
             "A reliable FTA classic — easy to onboard a new member into, hard to actually finish.",
         ],
     ),
-    dict(
-        slug="wardogs", name="WARDOGS", genre="Tactical Warfare FPS",
-        img="wardogs.jpg", players="100-Player, 3 Teams", platform="PC (Steam)",
-        status="Dedicated Server Live",
-        blurb=[
-            "A hundred players split across three teams, fighting over a shifting 2x2km Control Zone on a destructible Eastern European battlefield. First team to 100 points wins — every life starts with a fresh $10,000 loadout budget for weapons, gear, and vehicles.",
-            "FTA runs its own dedicated Qonzer server. Connection details are posted on the front page.",
-        ],
-    ),
 ]
 
 
@@ -276,7 +278,20 @@ for g in GAMES:
     paragraphs = "\n      ".join(f"<p>{esc(p)}</p>" for p in g["blurb"])
 
     extra_section = ""
-    if g["slug"] == "7-days-to-die":
+    if g["slug"] == "wardogs":
+        extra_section = """
+  <div class="panel">
+    <div class="panel-title">Join the FTA Server</div>
+    <p style="margin-bottom:10px;font-family:var(--font-mono);font-weight:700;">
+      Direct Connect: 208.115.223.188:7787
+    </p>
+    <p style="font-size:14.5px;margin:0;">
+      In-game, use the server browser and search &ldquo;FTA&rdquo;, or plug the address above straight into
+      Direct Connect. No password, no application &mdash; show up, buy a loadout you can't afford, and go.
+    </p>
+  </div>
+"""
+    elif g["slug"] == "7-days-to-die":
         extra_section = """
   <div class="panel">
     <div class="panel-title">Mod Package — Get the Loadout</div>

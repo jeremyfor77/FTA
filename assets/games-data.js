@@ -1,5 +1,11 @@
 var GAMES = [
   {
+    "slug": "wardogs",
+    "name": "WARDOGS",
+    "genre": "Tactical Warfare FPS",
+    "img": "wardogs.jpg"
+  },
+  {
     "slug": "7-days-to-die",
     "name": "7 Days to Die",
     "genre": "Survival Horror",
@@ -106,11 +112,5 @@ var GAMES = [
     "name": "Terraria",
     "genre": "2D Sandbox Adventure",
     "img": "terraria.jpg"
-  },
-  {
-    "slug": "wardogs",
-    "name": "WARDOGS",
-    "genre": "Tactical Warfare FPS",
-    "img": "wardogs.jpg"
   }
 ];
