@@ -169,6 +169,15 @@ GAMES = [
             "A reliable FTA classic — easy to onboard a new member into, hard to actually finish.",
         ],
     ),
+    dict(
+        slug="wardogs", name="WARDOGS", genre="Tactical Warfare FPS",
+        img="wardogs.jpg", players="100-Player, 3 Teams", platform="PC (Steam)",
+        status="Dedicated Server Live",
+        blurb=[
+            "A hundred players split across three teams, fighting over a shifting 2x2km Control Zone on a destructible Eastern European battlefield. First team to 100 points wins — every life starts with a fresh $10,000 loadout budget for weapons, gear, and vehicles.",
+            "FTA runs its own dedicated Qonzer server. Connection details are posted on the front page.",
+        ],
+    ),
 ]
 
 

@@ -106,5 +106,11 @@ var GAMES = [
     "name": "Terraria",
     "genre": "2D Sandbox Adventure",
     "img": "terraria.jpg"
+  },
+  {
+    "slug": "wardogs",
+    "name": "WARDOGS",
+    "genre": "Tactical Warfare FPS",
+    "img": "wardogs.jpg"
   }
 ];
